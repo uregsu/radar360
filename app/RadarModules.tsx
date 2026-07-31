@@ -81,7 +81,62 @@ export function AgreementsModule() {
 }
 
 export function AboutModule() {
-  return <><ModuleHeader eyebrow="PORTAL COMUNICA!" title="Sobre o RADAR 360" text="Visão Integrada da URE Guarulhos Sul."/><div className="about-grid">{[["Portal Comunica!","Ecossistema que organiza produtos, fluxos e comunicação institucional."],["RADAR 360","Camada de integração, acompanhamento, governança e visão regional."],["BIGuarulhosSul","Camada de inteligência de dados, indicadores e relatórios autorizados."],["Hubs setoriais","Produtos operacionais próprios dos setores, sem duplicação de suas funções."],["Acordos","Governança das integrações, fontes, responsabilidades e níveis de acesso."]].map(x=><article key={x[0]}><span>◆</span><h3>{x[0]}</h3><p>{x[1]}</p></article>)}</div><div className="version-card"><b>RADAR 360</b><span>Versão 1.1 · URE Guarulhos Sul</span></div></>;
+  const perspectives = [
+    ["◎", "Visão Regional", "Permite à gestão acompanhar a URE como um todo, observando setores, escolas, prioridades, pendências, indicadores e ações em andamento."],
+    ["◫", "Visão Setorial", "Cada serviço, seção ou equipe acompanha e atualiza seus próprios registros, preservando a responsabilidade e a autonomia sobre as informações de sua área."],
+    ["⌂", "Visão da Escola", "As informações produzidas pelos diferentes setores podem ser consolidadas por unidade escolar, formando uma leitura transversal do acompanhamento realizado pela URE."],
+  ];
+  const ecosystem = [
+    ["◉", "RADAR 360", "Camada de integração, acompanhamento e visão gerencial."],
+    ["BI", "BIGuarulhosSul", "Frente de inteligência de dados e indicadores."],
+    ["◆", "Hubs Setoriais", "Ambientes operacionais desenvolvidos pelos próprios setores."],
+    ["↗", "Integrações e Acordos", "Definem como produtos e informações se conectam, preservando origem, responsabilidade e governança."],
+  ];
+  const principles = [
+    ["⌘", "Integração", "Conectar setores, escolas, dados e iniciativas em um mesmo ambiente."],
+    ["✓", "Rastreabilidade", "Manter histórico, origem, responsáveis, prazos e atualizações das ações institucionais."],
+    ["◇", "Autonomia", "Cada setor permanece responsável por seus processos, dados e produtos."],
+    ["360°", "Visão 360°", "Permitir que uma mesma escola ou ação seja observada a partir de diferentes áreas da URE."],
+    ["⌑", "Segurança", "Acesso às informações conforme perfil, setor, escola e nível de visibilidade."],
+  ];
+
+  return <div className="about-page">
+    <ModuleHeader eyebrow="PORTAL COMUNICA!" title="Sobre o RADAR 360" text="Hub institucional para integração, acompanhamento e apoio à decisão."/>
+
+    <section className="about-intro" aria-labelledby="about-intro-title">
+      <div className="about-intro-mark" aria-hidden="true"><span>360°</span><i/></div>
+      <div className="about-intro-copy">
+        <span className="section-label">VISÃO INSTITUCIONAL</span>
+        <h2 id="about-intro-title">Informação conectada para enxergar a URE como um todo</h2>
+        <div className="about-intro-columns">
+          <p>O RADAR 360 é o hub institucional de integração, acompanhamento e apoio à decisão da URE Guarulhos Sul.</p>
+          <p>Ele reúne, em um único ambiente, informações, demandas, ações, acompanhamentos, projetos, evidências, indicadores e acessos aos produtos digitais desenvolvidos pelos diferentes setores da Unidade Regional de Ensino.</p>
+          <p>Seu objetivo é transformar informações dispersas em uma visão integrada da atuação da URE, fortalecendo a colaboração entre equipes, a rastreabilidade das ações e a tomada de decisão baseada em evidências.</p>
+        </div>
+      </div>
+    </section>
+
+    <section className="about-section" aria-labelledby="about-how-title">
+      <header className="about-section-heading"><span className="section-label">PERSPECTIVAS INTEGRADAS</span><h2 id="about-how-title">Como funciona</h2></header>
+      <div className="about-perspective-grid">{perspectives.map(([icon,title,text])=><article key={title}><span className="about-card-icon" aria-hidden="true">{icon}</span><h3>{title}</h3><p>{text}</p></article>)}</div>
+    </section>
+
+    <section className="about-section about-ecosystem" aria-labelledby="about-ecosystem-title">
+      <header className="about-section-heading"><span className="section-label">ARQUITETURA INSTITUCIONAL</span><h2 id="about-ecosystem-title">Um ecossistema, vários produtos</h2><p>O RADAR 360 faz parte do Portal Comunica!, o ecossistema digital da URE Guarulhos Sul.</p></header>
+      <div className="ecosystem-root"><span className="about-card-icon" aria-hidden="true">●</span><div><h3>Portal Comunica!</h3><p>Ecossistema que organiza e conecta as soluções digitais institucionais.</p></div></div>
+      <div className="ecosystem-connector" aria-hidden="true"><i/><span>↓</span><i/></div>
+      <div className="ecosystem-products">{ecosystem.map(([icon,title,text])=><article key={title}><span className="about-card-icon" aria-hidden="true">{icon}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div>
+    </section>
+
+    <section className="about-section" aria-labelledby="about-principles-title">
+      <header className="about-section-heading"><span className="section-label">COMPROMISSOS</span><h2 id="about-principles-title">Princípios do RADAR 360</h2></header>
+      <div className="about-principles-grid">{principles.map(([icon,title,text])=><article key={title}><span className="about-principle-icon" aria-hidden="true">{icon}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div>
+    </section>
+
+    <aside className="about-statement" aria-label="Síntese institucional"><span aria-hidden="true">◉</span><p>O RADAR 360 não substitui o trabalho dos setores. <strong>Ele conecta essas diferentes perspectivas para que a URE consiga enxergar o todo.</strong></p></aside>
+
+    <footer className="about-footer"><div><b>RADAR 360 <i>•</i> Portal Comunica!</b><span>URE Guarulhos Sul <i>•</i> Versão 1.0</span></div><p>Desenvolvido como iniciativa de transformação digital e integração institucional.</p></footer>
+  </div>;
 }
 
 export function ItemDetailModule({id,user,go}:{id:string;user:User;go:(path:string)=>void}) {
