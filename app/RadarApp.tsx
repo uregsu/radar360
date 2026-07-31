@@ -7,7 +7,7 @@ import { sectors } from "../config/sectors";
 import { demoData } from "../lib/demo/data";
 import { demoProvider } from "../lib/demo/provider";
 import { canAccess } from "../lib/permissions";
-import { getAuthErrorMessage, validateNewPassword } from "../lib/supabase/auth-errors";
+import { getAuthErrorMessage } from "../lib/supabase/auth-errors";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { Role, School, Sector, User } from "../types";
 import { AboutModule, AgreementsModule, BigModule, CommunicaModule, EvidenceModule, ExecutiveModule, IntegrationMatrixModule, ItemDetailModule, MdiModule, Radar360Module } from "./RadarModules";
@@ -42,23 +42,16 @@ function Logo({ compact = false }: { compact?: boolean }) {
 }
 
 function Login({ onDemo, onAuthenticated }: { onDemo: () => void; onAuthenticated: () => Promise<void> }) {
-  const [mode,setMode]=useState<"login"|"forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [message,setMessage]=useState("");
 
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setLoading(true); setError(""); setMessage("");
+    e.preventDefault(); setLoading(true); setError("");
     const supabase=getSupabaseBrowserClient();
-    if(mode==="forgot"){
-      const {error:authError}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://radar360-six.vercel.app/auth/update-password"});
-      if(authError)setError(getAuthErrorMessage(authError,"recovery"));else setMessage("Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação. Verifique também a caixa de spam.");
-    }else{
-      const {error:authError}=await supabase.auth.signInWithPassword({email,password});
-      if(authError)setError(getAuthErrorMessage(authError,"login"));else await onAuthenticated();
-    }
+    const {error:authError}=await supabase.auth.signInWithPassword({email,password});
+    if(authError)setError(getAuthErrorMessage(authError));else await onAuthenticated();
     setLoading(false);
   };
 
@@ -77,78 +70,18 @@ function Login({ onDemo, onAuthenticated }: { onDemo: () => void; onAuthenticate
     <section className="login-side">
       <form className="login-card" onSubmit={submit}>
         <div className="secure"><span>◆</span> AMBIENTE SEGURO</div>
-        <h2>{mode==="forgot"?"Recuperar acesso":"Bem-vindo ao RADAR 360"}</h2>
-        <p>{mode==="forgot"?"Informe seu e-mail institucional.":"Acesse o ambiente integrado da URE Guarulhos Sul."}</p>
+        <h2>Bem-vindo ao RADAR 360</h2>
+        <p>Acesse com as credenciais individuais fornecidas pela administradora.</p>
         <label>E-mail institucional<div className="input-wrap"><span>＠</span><input aria-label="E-mail institucional" value={email} onChange={e=>setEmail(e.target.value)} type="email" autoComplete="email" required/></div></label>
-        {mode!=="forgot"&&<label>Senha<div className="input-wrap"><span>⌁</span><input aria-label="Senha" value={password} onChange={e=>setPassword(e.target.value)} type="password" autoComplete="current-password" required/></div></label>}
+        <label>Senha<div className="input-wrap"><span>⌁</span><input aria-label="Senha" value={password} onChange={e=>setPassword(e.target.value)} type="password" autoComplete="current-password" required/></div></label>
         {error && <div className="login-error">{error}</div>}
-        {message&&<div className="login-success">{message}</div>}
-        <button className="primary-btn" disabled={loading}>{loading ? "Processando..." : <>{mode==="forgot"?"Enviar instruções":"Entrar no sistema"} <span>→</span></>}</button>
-        {mode==="login"?<button type="button" className="forgot-btn" onClick={()=>{setMode("forgot");setError("");setMessage("")}}>Esqueci minha senha</button>:<button type="button" className="forgot-btn" onClick={()=>{setMode("login");setError("");setMessage("")}}>Voltar ao login</button>}
-        {mode==="login"&&<button type="button" className="demo-btn" onClick={onDemo}><span>◎</span><b>Explorar versão demonstrativa</b><small>Ambiente isolado · dados fictícios</small></button>}
+        <button className="primary-btn" disabled={loading}>{loading ? "Entrando..." : <>Entrar no sistema <span>→</span></>}</button>
+        <div className="admin-password-note">Problemas de acesso ou troca de senha? Procure a administradora do RADAR 360.</div>
+        <button type="button" className="demo-btn" onClick={onDemo}><span>◎</span><b>Explorar versão demonstrativa</b><small>Ambiente isolado · dados fictícios</small></button>
         <small className="privacy">Protegido por autenticação e controle de acesso por perfil.</small>
       </form>
     </section>
   </main>
-}
-
-function UpdatePasswordPage() {
-  const [urlHasError]=useState(()=>Boolean(new URLSearchParams(window.location.search).get("error_description")));
-  const [password,setPassword]=useState("");
-  const [confirmation,setConfirmation]=useState("");
-  const [checking,setChecking]=useState(()=>!urlHasError);
-  const [validSession,setValidSession]=useState(false);
-  const [loading,setLoading]=useState(false);
-  const [error,setError]=useState(()=>urlHasError?"O link de recuperação é inválido ou expirou. Solicite um novo link.":"");
-  const [message,setMessage]=useState("");
-
-  useEffect(()=>{
-    const supabase=getSupabaseBrowserClient();
-    if(urlHasError)return;
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{
-      if(event==="PASSWORD_RECOVERY"&&session){setValidSession(true);setChecking(false)}
-      if(event==="INITIAL_SESSION"&&!session){setValidSession(false)}
-    });
-    const timeout=window.setTimeout(()=>setChecking(false),2500);
-    return()=>{window.clearTimeout(timeout);subscription.unsubscribe()}
-  },[urlHasError]);
-
-  const submit=async(e:React.FormEvent)=>{
-    e.preventDefault();setError("");setMessage("");
-    const validation=validateNewPassword(password,confirmation);if(validation){setError(validation);return}
-    setLoading(true);
-    const supabase=getSupabaseBrowserClient();
-    const {data:{session}}=await supabase.auth.getSession();
-    if(!session){setError("A sessão de recuperação expirou. Solicite um novo link.");setValidSession(false);setLoading(false);return}
-    const {error:authError}=await supabase.auth.updateUser({password});
-    if(authError){setError(getAuthErrorMessage(authError,"update"));setLoading(false);return}
-    setMessage("Senha atualizada com sucesso. Você já pode entrar com a nova senha.");
-    await supabase.auth.signOut();setLoading(false);
-    window.setTimeout(()=>{window.location.assign("/login")},1800);
-  };
-
-  return <main className="login-shell recovery-shell"><section className="login-story"><Logo/><div className="story-copy"><span className="eyebrow"><i/> RECUPERAÇÃO SEGURA</span><h1>Uma nova senha.<br/><span>O mesmo acesso institucional.</span></h1><p>Seu perfil, permissões e vínculos com o RADAR 360 permanecem inalterados.</p></div><footer>URE GUARULHOS SUL <span/> SECRETARIA DA EDUCAÇÃO</footer></section><section className="login-side"><form className="login-card" onSubmit={submit}><div className="secure"><span>◆</span> SUPABASE AUTH</div><h2>Definir nova senha</h2><p>{checking?"Validando o link de recuperação...":validSession?"Crie uma senha com pelo menos 8 caracteres, uma letra e um número.":"Este link não possui uma sessão de recuperação válida."}</p>{validSession&&<><label>Nova senha<div className="input-wrap"><span>⌁</span><input aria-label="Nova senha" type="password" value={password} onChange={e=>setPassword(e.target.value)} autoComplete="new-password" minLength={8} required/></div></label><label>Confirmar nova senha<div className="input-wrap"><span>⌁</span><input aria-label="Confirmar nova senha" type="password" value={confirmation} onChange={e=>setConfirmation(e.target.value)} autoComplete="new-password" minLength={8} required/></div></label></>}{error&&<div className="login-error">{error}</div>}{message&&<div className="login-success">{message}</div>}{validSession&&<button className="primary-btn" disabled={loading}>{loading?"Atualizando...":<>Atualizar senha <span>→</span></>}</button>} {!validSession&&!checking&&<button type="button" className="primary-btn" onClick={()=>window.location.assign("/login")}>Voltar ao login</button>}</form></section></main>;
-}
-
-function MyAccount({user}:{user:User}) {
-  const [currentPassword,setCurrentPassword]=useState("");
-  const [newPassword,setNewPassword]=useState("");
-  const [confirmation,setConfirmation]=useState("");
-  const [loading,setLoading]=useState(false);
-  const [error,setError]=useState("");
-  const [message,setMessage]=useState("");
-  const submit=async(e:React.FormEvent)=>{
-    e.preventDefault();setError("");setMessage("");
-    const validation=validateNewPassword(newPassword,confirmation);if(validation){setError(validation);return}
-    if(currentPassword===newPassword){setError("A nova senha deve ser diferente da senha atual.");return}
-    setLoading(true);const supabase=getSupabaseBrowserClient();
-    const {error:reauthError}=await supabase.auth.signInWithPassword({email:user.email,password:currentPassword});
-    if(reauthError){setError(getAuthErrorMessage(reauthError,"reauth"));setLoading(false);return}
-    const {error:updateError}=await supabase.auth.updateUser({password:newPassword});
-    if(updateError){setError(getAuthErrorMessage(updateError,"update"));setLoading(false);return}
-    setCurrentPassword("");setNewPassword("");setConfirmation("");setMessage("Senha alterada com sucesso.");setLoading(false)
-  };
-  return <><PageTitle eyebrow="MINHA CONTA" title="Segurança e acesso" text="Altere sua senha sem modificar seu perfil institucional ou suas permissões."/><section className="account-card"><div className="account-summary"><span>{user.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span><div><b>{user.name}</b><small>{user.email}</small><em>{user.institutionalProfileName||user.role}</em></div></div><form className="account-password-form" onSubmit={submit}><h2>Alterar senha</h2><p>Para sua segurança, confirme primeiro a senha atual.</p><label>Senha atual<input type="password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} autoComplete="current-password" required/></label><label>Nova senha<input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} autoComplete="new-password" minLength={8} required/></label><label>Confirmar nova senha<input type="password" value={confirmation} onChange={e=>setConfirmation(e.target.value)} autoComplete="new-password" minLength={8} required/></label>{error&&<div className="account-error">{error}</div>}{message&&<div className="account-success">{message}</div>}<button type="submit" disabled={loading}>{loading?"Alterando...":"Alterar senha"}</button></form></section></>;
 }
 
 function DataProvenance({ demo = false }: { demo?: boolean }) {
@@ -348,14 +281,14 @@ function ManagementSectorDashboard({user}:{user:User}) {
 
 function AppShell({ user, onLogout }: { user:User; onLogout:()=>void }) {
   const [path,setPath]=useState(pathNow); const [mobile,setMobile]=useState(false);
-  const go=(next:string)=>{if(next!=="/minha-conta"&&!canAccess(user.role,next)){setPath("/acesso-negado");window.history.pushState({},"",next);return;}window.history.pushState({},"",next);setPath(next);setMobile(false);window.scrollTo(0,0)};
+  const go=(next:string)=>{if(!canAccess(user.role,next)){setPath("/acesso-negado");window.history.pushState({},"",next);return;}window.history.pushState({},"",next);setPath(next);setMobile(false);window.scrollTo(0,0)};
   useEffect(()=>{const fn=()=>setPath(pathNow());window.addEventListener("popstate",fn);return()=>window.removeEventListener("popstate",fn)},[]);
   const sector=useMemo(()=>sectors.find(s=>path.startsWith(`/radar360/setores/${s.slug}`)),[path]);
   const schoolPool=user.role==="VISITANTE"?demoProvider.getSchools():schools;
   const school=useMemo(()=>schoolPool.find(s=>path.startsWith(`/radar360/escolas/${s.slug}`)),[path,schoolPool]);
   const itemSegment=path.startsWith("/radar360/itens/")?path.split("/").pop()||"":"";const itemTypes=["demanda","acao","acompanhamento","projeto","pendencia","ocorrencia"];const itemType=itemTypes.includes(itemSegment)?itemSegment.toUpperCase():undefined;const itemId=itemSegment&&!itemType?itemSegment:undefined;
   const schoolSelf:School={id:user.schoolId||"",name:"Minha Escola",slug:"",pei:false,status:"ativa"};
-  const content=path==="/dashboard"||path==="/"?<Overview user={user} go={go}/>:path==="/minha-conta"?<MyAccount user={user}/>:path==="/radar360"?<Radar360Module user={user} go={go}/>:path==="/radar360/meu-setor"?<ManagementSectorDashboard user={user}/>:path==="/radar360/minha-escola"?<SchoolView school={schoolSelf} user={user}/>:path==="/radar360/usuarios"?<UsersAdmin/>:path==="/radar360/demandas"?<Demands user={user} recordType="DEMANDA" go={go}/>:itemId?<ItemDetailModule id={itemId} user={user} go={go}/>:path==="/radar360/itens"||itemType?<Demands user={user} recordType={itemType} go={go}/>:path==="/radar360/setores"?<Sectors go={go} user={user}/>:sector?<SectorView sector={sector} user={user}/>:path==="/radar360/escolas"?<Schools go={go} user={user}/>:school?<SchoolView school={school} user={user}/>:path==="/radar360/biguarulho"?<BigModule/>:path==="/radar360/integracao"?<MdiModule/>:path==="/radar360/comunica"?<CommunicaModule user={user}/>:path==="/radar360/evidencias"?<EvidenceModule user={user}/>:path==="/radar360/dirigente"?<ExecutiveModule user={user} mode="ADMIN"/>:path==="/radar360/gestao"?<ExecutiveModule user={user} mode="GESTAO"/>:path==="/radar360/matriz"?<IntegrationMatrixModule/>:path==="/radar360/acordos"?<AgreementsModule/>:path==="/radar360/sobre"?<AboutModule/>:path==="/acesso-negado"?<ModulePage path="/denied" go={go}/>:<ModulePage path={path} go={go}/>;
+  const content=path==="/dashboard"||path==="/"?<Overview user={user} go={go}/>:path==="/radar360"?<Radar360Module user={user} go={go}/>:path==="/radar360/meu-setor"?<ManagementSectorDashboard user={user}/>:path==="/radar360/minha-escola"?<SchoolView school={schoolSelf} user={user}/>:path==="/radar360/usuarios"?<UsersAdmin/>:path==="/radar360/demandas"?<Demands user={user} recordType="DEMANDA" go={go}/>:itemId?<ItemDetailModule id={itemId} user={user} go={go}/>:path==="/radar360/itens"||itemType?<Demands user={user} recordType={itemType} go={go}/>:path==="/radar360/setores"?<Sectors go={go} user={user}/>:sector?<SectorView sector={sector} user={user}/>:path==="/radar360/escolas"?<Schools go={go} user={user}/>:school?<SchoolView school={school} user={user}/>:path==="/radar360/biguarulho"?<BigModule/>:path==="/radar360/integracao"?<MdiModule/>:path==="/radar360/comunica"?<CommunicaModule user={user}/>:path==="/radar360/evidencias"?<EvidenceModule user={user}/>:path==="/radar360/dirigente"?<ExecutiveModule user={user} mode="ADMIN"/>:path==="/radar360/gestao"?<ExecutiveModule user={user} mode="GESTAO"/>:path==="/radar360/matriz"?<IntegrationMatrixModule/>:path==="/radar360/acordos"?<AgreementsModule/>:path==="/radar360/sobre"?<AboutModule/>:path==="/acesso-negado"?<ModulePage path="/denied" go={go}/>:<ModulePage path={path} go={go}/>;
   const managementNav=[["⌂","Visão geral","/dashboard"],["◉","Radar 360","/radar360"],["◆","Meu Setor","/radar360/meu-setor"],["▦","Setores e Hubs","/radar360/setores"],["◆","BIGuarulhosSul","/radar360/biguarulho"],["↗","Integração! MDI","/radar360/integracao"],["◫","Comunica!","/radar360/comunica"],["✓","Evidências","/radar360/evidencias"],["◈","Painel da Gestão","/radar360/gestao"],["⌂","Painel das Escolas","/radar360/escolas"],["≋","Demandas","/radar360/demandas"],["⊞","Matriz de Integração","/radar360/matriz"],["≋","Acordos","/radar360/acordos"],["ⓘ","Sobre","/radar360/sobre"]] as const;
   const schoolNav=[["⌂","Minha Escola","/radar360/minha-escola"],["◈","Visão geral","/dashboard"],["≋","Demandas","/radar360/demandas"],["◆","Acompanhamentos","/radar360/itens/acompanhamento"],["✓","Evidências","/radar360/evidencias"],["◫","Devolutivas","/radar360/evidencias"],["◉","Orientações","/radar360/comunica"],["▦","Documentos","/radar360/comunica"],["ⓘ","Sobre","/radar360/sobre"]] as const;
   const visitorNav=[["⌂","Visão demonstrativa","/dashboard"],["◉","Radar 360 Demo","/radar360"],["▦","Setores Demo","/radar360/setores"],["⌂","Escolas Demo","/radar360/escolas"],["☷","Itens Demo","/radar360/itens"],["◈","Indicadores Demo","/radar360/gestao"],["ⓘ","Sobre","/radar360/sobre"]] as const;
@@ -363,15 +296,14 @@ function AppShell({ user, onLogout }: { user:User; onLogout:()=>void }) {
   return <div className="app-shell">
     <aside className={`sidebar ${mobile?"open":""}`}><Logo/><button className="close-menu" onClick={()=>setMobile(false)}>×</button><span className="nav-heading">MENU PRINCIPAL</span><nav>{visibleNav.map(n=><button key={n[2]} className={path===n[2]||n[2]!=="/radar360"&&path.startsWith(n[2])?"active":""} onClick={()=>go(n[2])}><i>{n[0]}</i><span>{n[1]}</span>{"Radar 360"===n[1]&&<em>NOVO</em>}</button>)}</nav><div className="sidebar-foot"><span>URE GUARULHOS SUL</span><b>Portal Comunica! · v1.0</b></div></aside>
     <div className="app-main"><header className="topbar"><button className="hamburger" onClick={()=>setMobile(true)}>☰</button><div className="greeting"><span>Olá, {user.name.split(" ")[0]}</span><b>{new Intl.DateTimeFormat("pt-BR",{weekday:"long",day:"2-digit",month:"long"}).format(new Date())}</b></div>
-      <div className="top-actions">{user.role==="VISITANTE"&&<span className="demo-badge">◎ MODO VISITANTE · DADOS ILUSTRATIVOS</span>}<button className="bell">♢<i/></button>{user.role!=="VISITANTE"?<button className="user-chip account-trigger" onClick={()=>go("/minha-conta")} aria-label="Abrir minha conta"><span>{user.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span><p><b>{user.name}</b><small>{user.institutionalProfileName||user.role}</small></p></button>:<div className="user-chip"><span>VI</span><p><b>Visitante</b><small>Ambiente demonstrativo</small></p></div>}<button className="logout" onClick={onLogout}>Sair ↗</button></div></header>
+      <div className="top-actions">{user.role==="VISITANTE"&&<span className="demo-badge">◎ MODO VISITANTE · DADOS ILUSTRATIVOS</span>}<button className="bell">♢<i/></button>{user.role!=="VISITANTE"?<div className="user-chip"><span>{user.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span><p><b>{user.name}</b><small>{user.institutionalProfileName||user.role}</small></p></div>:<div className="user-chip"><span>VI</span><p><b>Visitante</b><small>Ambiente demonstrativo</small></p></div>}<button className="logout" onClick={onLogout}>Sair ↗</button></div></header>
       {user.role==="VISITANTE"&&<div className="mobile-demo">Ambiente demonstrativo · nenhum dado real</div>}
       <main className="content">{content}</main></div>{mobile&&<button className="overlay" onClick={()=>setMobile(false)} aria-label="Fechar menu"/>}
   </div>;
 }
 
 export default function RadarApp() {
-  const recoveryPath=pathNow()==="/auth/update-password"||pathNow()==="/redefinir-senha";
-  const [ready,setReady]=useState(recoveryPath); const [user,setUser]=useState<User|null>(null); const [accessError,setAccessError]=useState("");
+  const [ready,setReady]=useState(false); const [user,setUser]=useState<User|null>(null); const [accessError,setAccessError]=useState("");
   const loadAuthenticatedUser=async()=>{
     const supabase=getSupabaseBrowserClient();const {data:{user:authUser}}=await supabase.auth.getUser();
     if(!authUser){setUser(null);setReady(true);return}
@@ -381,10 +313,9 @@ export default function RadarApp() {
     setAccessError("");setUser({id:profile.id,name:profile.name,email:profile.email,role:profile.role as Role,sectorId:profile.sector_id??undefined,schoolId:profile.school_id??undefined,institutionalProfileId:profile.institutional_profile_id,institutionalProfileName:linked?.short_name||linked?.name,status:"ativo"});
     if(["/","/login"].includes(pathNow()))window.history.replaceState({},"","/dashboard");setReady(true);
   };
-  useEffect(()=>{const supabase=getSupabaseBrowserClient();if(recoveryPath)return;queueMicrotask(()=>void loadAuthenticatedUser());const {data:{subscription}}=supabase.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT"){setUser(null);setReady(true)}});return()=>subscription.unsubscribe()},[recoveryPath]);
+  useEffect(()=>{const supabase=getSupabaseBrowserClient();queueMicrotask(()=>void loadAuthenticatedUser());const {data:{subscription}}=supabase.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT"){setUser(null);setReady(true)}});return()=>subscription.unsubscribe()},[]);
   const demo=()=>{setAccessError("");setUser({id:"demo",name:"Visitante",email:"",role:"VISITANTE",institutionalProfileName:"Ambiente demonstrativo",status:"ativo"});window.history.pushState({},"","/dashboard")};
   const logout=async()=>{if(user?.role!=="VISITANTE")await getSupabaseBrowserClient().auth.signOut();setUser(null);setAccessError("");window.history.pushState({},"","/login")};
-  if(recoveryPath)return <UpdatePasswordPage/>;
   if(!ready)return <div className="boot"><Logo/><span/></div>;
   return user?<AppShell user={user} onLogout={()=>void logout()}/>:<><Login onDemo={demo} onAuthenticated={loadAuthenticatedUser}/>{accessError&&<div className="access-error-banner">{accessError}</div>}</>;
 }
