@@ -187,20 +187,43 @@ function SectorView({ sector,user }: { sector: Sector;user:User }) {
       <DataProvenance demo={demo}/></section></div></>;
 }
 
-type AccessUser = {id:string;name:string;email:string;role:Role;sector_id?:string|null;school_id?:string|null;active:boolean;institutional_profiles?:{name?:string;short_name?:string}|null};
+type AccessUser = {id:string;user_id:string;name:string;email:string;role:Role;sector_id?:string|null;school_id?:string|null;active:boolean;institutional_profiles?:{name?:string;short_name?:string}|null};
 
 function UsersAdmin() {
   const [items,setItems]=useState<AccessUser[]>([]);
   const [query,setQuery]=useState(""); const [loading,setLoading]=useState(true);
-  const load=async()=>{setLoading(true);const {data}=await getSupabaseBrowserClient().from("profiles").select("id,name,email,role,sector_id,school_id,active,institutional_profiles(name,short_name)").order("name");setItems((data??[]) as unknown as AccessUser[]);setLoading(false)};
+  const [passwordUser,setPasswordUser]=useState<AccessUser|null>(null);
+  const [newPassword,setNewPassword]=useState("");
+  const [confirmPassword,setConfirmPassword]=useState("");
+  const [passwordLoading,setPasswordLoading]=useState(false);
+  const [passwordError,setPasswordError]=useState("");
+  const [passwordSuccess,setPasswordSuccess]=useState("");
+  const load=async()=>{setLoading(true);const {data}=await getSupabaseBrowserClient().from("profiles").select("id,user_id,name,email,role,sector_id,school_id,active,institutional_profiles(name,short_name)").order("name");setItems((data??[]) as unknown as AccessUser[]);setLoading(false)};
   useEffect(()=>{queueMicrotask(()=>void load())},[]);
   const toggle=async(item:AccessUser)=>{const {error}=await getSupabaseBrowserClient().from("profiles").update({active:!item.active}).eq("id",item.id);if(!error)await load()};
+  const choosePasswordUser=(item:AccessUser)=>{setPasswordUser(item);setNewPassword("");setConfirmPassword("");setPasswordError("");setPasswordSuccess("")};
+  const savePassword=async(event:React.FormEvent)=>{
+    event.preventDefault();setPasswordError("");setPasswordSuccess("");
+    if(!passwordUser?.user_id){setPasswordError("Este perfil ainda não está vinculado ao Supabase Auth.");return}
+    if(newPassword.length<10||!/[a-z]/.test(newPassword)||!/[A-Z]/.test(newPassword)||!/\d/.test(newPassword)){setPasswordError("Use ao menos 10 caracteres, com maiúscula, minúscula e número.");return}
+    if(newPassword!==confirmPassword){setPasswordError("A confirmação não corresponde à nova senha.");return}
+    setPasswordLoading(true);
+    const {error}=await getSupabaseBrowserClient().functions.invoke("admin-set-password",{body:{targetUserId:passwordUser.user_id,newPassword}});
+    if(error){
+      let message="Não foi possível alterar a senha. Verifique sua sessão administrativa.";
+      const context=(error as {context?:Response}).context;
+      if(context){try{const body=await context.clone().json() as {error?:string};if(body.error)message=body.error}catch{/* resposta sem JSON */}}
+      setPasswordError(message);setPasswordLoading(false);return;
+    }
+    setNewPassword("");setConfirmPassword("");setPasswordSuccess(`Senha de ${passwordUser.email} atualizada com segurança.`);setPasswordLoading(false);
+  };
   const filtered=items.filter(x=>(x.name+" "+x.email+" "+x.role).toLowerCase().includes(query.toLowerCase()));
   return <><PageTitle eyebrow="ADMINISTRAÇÃO E RBAC" title="Usuários e acessos" text="Gerencie perfis, vínculos institucionais e o ciclo de acesso ao RADAR 360."/>
     <div className="auth-notice"><i>⌁</i><div><b>Identidade institucional ativa</b><p>Os acessos abaixo vêm do Supabase Auth e obedecem às regras de segurança por perfil. Convites exigem o serviço administrativo protegido.</p></div><span>SUPABASE AUTH</span></div>
+    {passwordUser&&<form className="admin-password-form" onSubmit={savePassword}><header><div><b>Definir nova senha</b><p>{passwordUser.name} · {passwordUser.email}</p></div><button type="button" onClick={()=>setPasswordUser(null)} aria-label="Fechar">×</button></header><div className="admin-password-fields"><label>Nova senha<input type="password" autoComplete="new-password" value={newPassword} onChange={event=>setNewPassword(event.target.value)} required minLength={10}/></label><label>Confirmar nova senha<input type="password" autoComplete="new-password" value={confirmPassword} onChange={event=>setConfirmPassword(event.target.value)} required minLength={10}/></label><button type="submit" disabled={passwordLoading}>{passwordLoading?"Salvando...":"Atualizar senha"}</button></div><small>A senha é enviada diretamente ao Supabase Auth e não é armazenada no perfil nem em logs.</small>{passwordError&&<p className="account-error">{passwordError}</p>}{passwordSuccess&&<p className="account-success">{passwordSuccess}</p>}</form>}
     <div className="access-kpis"><div><span>Usuários cadastrados</span><b>{items.length}</b></div><div><span>Acessos ativos</span><b>{items.filter(x=>x.active).length}</b></div><div><span>Acessos suspensos</span><b>{items.filter(x=>!x.active).length}</b></div><div><span>Perfis institucionais</span><b>100</b></div></div>
     <section className="access-panel"><header><div className="search">⌕<input aria-label="Pesquisar usuário" placeholder="Pesquisar nome, e-mail ou perfil..." value={query} onChange={e=>setQuery(e.target.value)}/></div></header>
-      <div className="access-table"><div className="table-head"><span>USUÁRIO</span><span>PERFIL</span><span>VÍNCULO</span><span>STATUS</span><span>AÇÕES</span></div>{loading?<div className="no-records">Carregando usuários...</div>:filtered.length?filtered.map(item=><div className="table-row" key={item.id}><div className="access-user"><i>{item.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</i><p><b>{item.name}</b><span>{item.email}</span></p></div><span className={`role-pill r-${item.role.toLowerCase()}`}>{item.role}</span><span>{item.institutional_profiles?.short_name||item.institutional_profiles?.name||"Visão global"}</span><span className={`access-status ${item.active?"ativo":"inativo"}`}><i/>{item.active?"ativo":"inativo"}</span><div className="row-actions"><button onClick={()=>void toggle(item)}>{item.active?"Suspender":"Ativar"}</button></div></div>):<div className="no-records">Nenhum usuário cadastrado.</div>}</div>
+      <div className="access-table"><div className="table-head"><span>USUÁRIO</span><span>PERFIL</span><span>VÍNCULO</span><span>STATUS</span><span>AÇÕES</span></div>{loading?<div className="no-records">Carregando usuários...</div>:filtered.length?filtered.map(item=><div className="table-row" key={item.id}><div className="access-user"><i>{item.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</i><p><b>{item.name}</b><span>{item.email}</span></p></div><span className={`role-pill r-${item.role.toLowerCase()}`}>{item.role}</span><span>{item.institutional_profiles?.short_name||item.institutional_profiles?.name||"Visão global"}</span><span className={`access-status ${item.active?"ativo":"inativo"}`}><i/>{item.active?"ativo":"inativo"}</span><div className="row-actions"><button onClick={()=>choosePasswordUser(item)} disabled={!item.user_id}>Definir senha</button><button onClick={()=>void toggle(item)}>{item.active?"Suspender":"Ativar"}</button></div></div>):<div className="no-records">Nenhum usuário cadastrado.</div>}</div>
     </section>
     <DataProvenance/>
   </>;
