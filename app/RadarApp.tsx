@@ -4,22 +4,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { schools } from "../config/schools";
 import { sectors } from "../config/sectors";
+import { PAINEL_MDI_ROUTE } from "../config/products";
 import { demoData } from "../lib/demo/data";
 import { demoProvider } from "../lib/demo/provider";
 import { canAccess } from "../lib/permissions";
 import { getAuthErrorMessage } from "../lib/supabase/auth-errors";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { Role, School, Sector, User } from "../types";
-import { AboutModule, AgreementsModule, BigModule, CommunicaModule, EvidenceModule, ExecutiveModule, IntegrationMatrixModule, ItemDetailModule, MdiModule, Radar360Module } from "./RadarModules";
+import { AboutModule, AgreementsModule, BigModule, CommunicaModule, EvidenceModule, ExecutiveModule, IntegrationMatrixModule, ItemDetailModule, MdiModule, PainelMdiModule, Radar360Module } from "./RadarModules";
 
 const nav = [
   ["⌂","Visão geral","/dashboard",["ADMIN","GESTAO","ESCOLA","VISITANTE"]],
-  ["◉","Radar 360","/radar360",["ADMIN","GESTAO","VISITANTE"]],
+  ["◉","SuperBI 360 | GSU","/radar360",["ADMIN","GESTAO","VISITANTE"]],
   ["▦","Setores e hubs","/radar360/setores",["ADMIN","GESTAO","VISITANTE"]],
   ["◆","BIGuarulhosSul","/radar360/biguarulho",["ADMIN","GESTAO","VISITANTE"]],
   ["↗","Integração! MDI","/radar360/integracao",["ADMIN","GESTAO","VISITANTE"]],
   ["◫","Comunica!","/radar360/comunica",["ADMIN","GESTAO","VISITANTE"]],
   ["✓","Evidências","/radar360/evidencias",["ADMIN","GESTAO","ESCOLA"]],
+  ["◇","Painel MDI",PAINEL_MDI_ROUTE,["ADMIN","GESTAO"]],
   ["♙","Painel da Dirigente","/radar360/dirigente",["ADMIN"]],
   ["◈","Painel da Gestão","/radar360/gestao",["ADMIN","GESTAO"]],
   ["⌂","Painel das Escolas","/radar360/escolas",["ADMIN","GESTAO","ESCOLA","VISITANTE"]],
@@ -37,7 +39,7 @@ function pathNow() {
 function Logo({ compact = false }: { compact?: boolean }) {
   return <div className={`brand ${compact ? "compact" : ""}`}>
     <div className="brand-mark"><i/><i/><i/></div>
-    {!compact && <div><b>RADAR <em>360</em></b><span>PORTAL COMUNICA!</span></div>}
+    {!compact && <div><b>SuperBI <em>360</em> | GSU</b><span>PORTAL COMUNICA!</span></div>}
   </div>;
 }
 
@@ -62,7 +64,7 @@ function Login({ onDemo, onAuthenticated }: { onDemo: () => void; onAuthenticate
       <div className="story-copy">
         <span className="eyebrow"><i/> ECOSSISTEMA PORTAL COMUNICA!</span>
         <h1>Visão integrada.<br/>Decisões mais <span>inteligentes.</span></h1>
-        <p>Um hub institucional que conecta setores, escolas e dados para transformar acompanhamento em ação.</p>
+        <p>Plataforma Integrada de Gestão, Evidências e Inteligência da URE Guarulhos Sul</p>
         <div className="story-stats"><div><b>360°</b><span>visão institucional</span></div><div><b>17</b><span>setores conectáveis</span></div><div><b>82</b><span>escolas estaduais</span></div></div>
       </div>
       <footer>URE GUARULHOS SUL <span/> SECRETARIA DA EDUCAÇÃO</footer>
@@ -70,13 +72,13 @@ function Login({ onDemo, onAuthenticated }: { onDemo: () => void; onAuthenticate
     <section className="login-side">
       <form className="login-card" onSubmit={submit}>
         <div className="secure"><span>◆</span> AMBIENTE SEGURO</div>
-        <h2>Bem-vindo ao RADAR 360</h2>
+        <h2>Bem-vindo ao SuperBI 360 | GSU</h2>
         <p>Acesse com as credenciais individuais fornecidas pela administradora.</p>
         <label>E-mail institucional<div className="input-wrap"><span>＠</span><input aria-label="E-mail institucional" value={email} onChange={e=>setEmail(e.target.value)} type="email" autoComplete="email" required/></div></label>
         <label>Senha<div className="input-wrap"><span>⌁</span><input aria-label="Senha" value={password} onChange={e=>setPassword(e.target.value)} type="password" autoComplete="current-password" required/></div></label>
         {error && <div className="login-error">{error}</div>}
         <button className="primary-btn" disabled={loading}>{loading ? "Entrando..." : <>Entrar no sistema <span>→</span></>}</button>
-        <div className="admin-password-note">Problemas de acesso ou troca de senha? Procure a administradora do RADAR 360.</div>
+        <div className="admin-password-note">Problemas de acesso ou troca de senha? Procure a administradora do SuperBI 360 | GSU.</div>
         <button type="button" className="demo-btn" onClick={onDemo}><span>◎</span><b>Explorar versão demonstrativa</b><small>Ambiente isolado · dados fictícios</small></button>
         <small className="privacy">Protegido por autenticação e controle de acesso por perfil.</small>
       </form>
@@ -86,7 +88,7 @@ function Login({ onDemo, onAuthenticated }: { onDemo: () => void; onAuthenticate
 
 function DataProvenance({ demo = false }: { demo?: boolean }) {
   return <div className="provenance">
-    <span><b>Fonte</b>{demo ? "Base demonstrativa RADAR 360" : "Supabase RADAR 360"}</span>
+    <span><b>Fonte</b>{demo ? "Base demonstrativa · SuperBI 360 | GSU" : "Supabase · SuperBI 360 | GSU"}</span>
     <span><b>Responsável</b>{demo ? "Equipe de produto" : "URE Guarulhos Sul"}</span>
     <span><b>Acesso</b>{demo ? "Visitante · ilustrativo" : "Conforme perfil"}</span>
     <span><b>Integração</b>{demo ? "Mock isolado" : "Banco institucional · RLS"}</span>
@@ -120,8 +122,8 @@ function Overview({ user, go }: { user: User; go: (p:string)=>void }) {
   const actions=demo?demoData.actions:[];const updates=demo?demoData.updates:[];
   return <>
     <section className="hero">
-      <div><div className="breadcrumb">RADAR 360 <span>/</span> VISÃO GERAL</div><h1>{user.role === "ESCOLA" ? "Painel da Escola" : "Visão integrada da URE"}</h1>
-      <p>{demo ? "Conheça como decisões, setores e escolas se conectam em uma única visão institucional." : "Acompanhe indicadores, ações e integrações em um único ambiente confiável."}</p></div>
+      <div><div className="breadcrumb">SuperBI 360 | GSU <span>/</span> VISÃO REGIONAL 360</div><h1>{user.role === "ESCOLA" ? "Painel da Escola" : "Visão Regional 360"}</h1>
+      <p>{demo ? "Conheça como decisões, setores e escolas se conectam em uma única visão institucional." : "Plataforma Integrada de Gestão, Evidências e Inteligência da URE Guarulhos Sul"}</p></div>
       <button className="outline-btn" onClick={()=>go("/radar360/setores")}>Explorar ecossistema <span>→</span></button>
     </section>
     <div className="kpi-grid">{kpis.map((k,i)=><article className={`kpi ${k.tone}`} key={k.label}><div className="kpi-top"><span>{["⌂","⌘","◈","✓"][i%4]}</span><small>{k.trend}</small></div><strong>{k.value}</strong><p>{k.label}</p><i/></article>)}</div>
@@ -131,13 +133,14 @@ function Overview({ user, go }: { user: User; go: (p:string)=>void }) {
         <div className="actions">{demo?(actions.length?actions.map(a=><div className="action" key={a.title}><div className="action-icon">↗</div><div><b>{a.title}</b><span>{a.sector} · {a.status}</span><div className="progress"><i style={{width:`${a.progress}%`}}/></div></div><strong>{a.progress}%</strong></div>):null):realItems.length?realItems.slice(0,6).map(a=><button className="action real-action" key={a.id} onClick={()=>go(`/radar360/itens/${a.id}`)}><div className="action-icon">↗</div><div><b>{a.title}</b><span>{a.sectors?.code||"Regional"} · {a.record_type} · {a.status.replaceAll("_"," ")}</span></div><strong>→</strong></button>):<div className="no-records">Sem registros institucionais.</div>}</div>
       </section>
       <section className="panel">
-        <header><div><span className="section-label">AGORA NO RADAR</span><h2>Atualizações</h2></div></header>
+        <header><div><span className="section-label">AGORA NO SUPERBI</span><h2>Atualizações</h2></div></header>
         <div className="updates">{demo?(updates.length?updates.map((u,i)=><div key={u.title}><i className={i===0?"active":""}/><p><b>{u.title}</b><span>{u.meta}</span></p></div>):null):realHistory.length?realHistory.map((u,i)=><div key={u.id}><i className={i===0?"active":""}/><p><b>{u.institutional_items?.title||"Item institucional"}</b><span>{u.event_type.replaceAll("_"," ")} · {new Date(u.created_at).toLocaleDateString("pt-BR")}</span></p></div>):<div className="no-records">Sem atualizações registradas.</div>}</div>
       </section>
       <section className="panel ecosystem span-2">
         <header><div><span className="section-label">ECOSSISTEMA INTEGRADO</span><h2>Uma visão, múltiplas camadas</h2></div></header>
-        <div className="eco-flow"><div className="radar-node"><Logo compact/><b>RADAR 360</b><span>Hub institucional</span></div><div className="connector"/>{[["BI","BIGuarulhosSul","Inteligência de dados","/radar360/biguarulho"],["MDI","Integração!","Painel integrado","/radar360/integracao"],["CO","Comunica!","Institucional","/radar360/comunica"]].map(x=><button key={x[0]} onClick={()=>go(x[3])}><i>{x[0]}</i><b>{x[1]}</b><span>{x[2]}</span></button>)}</div>
+        <div className="eco-flow"><div className="radar-node"><Logo compact/><b>SuperBI 360 | GSU</b><span>Hub institucional</span></div><div className="connector"/>{[["BI","BIGuarulhosSul","Inteligência de dados","/radar360/biguarulho"],["MDI","Painel MDI","Painel estratégico",PAINEL_MDI_ROUTE],["CO","Comunica!","Institucional","/radar360/comunica"]].filter(x=>x[0]!=="MDI"||canAccess(user.role,PAINEL_MDI_ROUTE)).map(x=><button key={x[0]} onClick={()=>go(x[3])}><i>{x[0]}</i><b>{x[1]}</b><span>{x[2]}</span></button>)}</div>
       </section>
+      {canAccess(user.role,PAINEL_MDI_ROUTE)&&<article className="panel mdi-quick-card span-2"><div className="mdi-quick-icon" aria-hidden="true">◇</div><div><span className="section-label">PAINEL ESTRATÉGICO</span><h2>Painel MDI</h2><p>Visão estratégica integrada das dimensões pedagógica, administrativa, financeira, organizacional e de comunicação da URE Guarulhos Sul.</p></div><button onClick={()=>go(PAINEL_MDI_ROUTE)} aria-label="Acessar página interna do Painel MDI">Acessar painel <span aria-hidden="true">→</span></button></article>}
       <section className="panel health">
         <header><div><span className="section-label">INTEGRAÇÃO</span><h2>Saúde dos hubs</h2></div></header>
         <div className="health-score"><div><b>{demo?"94":"3"}</b><span>{demo?"/100":" hubs"}</span></div><p><strong>{demo?"Operação estável":"Estrutura conectada"}</strong><span>{demo?"13 integrados · 4 em implantação":"3 links externos cadastrados"}</span></p></div>
@@ -154,7 +157,7 @@ const demoHubCatalog=[{id:"demo-setec",name:"SETEC Hub",sector_id:"SETEC",descri
 function HubAccessCard({hub,demo=false}:{hub:HubRow|typeof demoHubCatalog[number];demo?:boolean}) {
   const sector="sectors" in hub?(hub.sectors?.code||"Setor"):hub.sector_id;
   const url="external_url" in hub?hub.external_url:null;
-  return <article className="hub-access-card"><div><span className="section-label">HUB SETORIAL · {sector}</span><h3>{hub.name}</h3><p>{hub.description||"Sistema operacional próprio do setor, integrado ao ecossistema RADAR 360."}</p></div><div className="hub-meta"><span><b>Status</b>{"status" in hub?hub.status:"Integrado"}</span><span><b>Integração</b>{"integration_type" in hub?(hub.integration_type||"LINK_EXTERNO"):"Produto setorial"}</span></div>{!demo&&url?<a href={url} target="_blank" rel="noopener noreferrer">Abrir Hub ↗</a>:<button disabled>Produto setorial integrado ao ecossistema</button>}</article>;
+  return <article className="hub-access-card"><div><span className="section-label">HUB SETORIAL · {sector}</span><h3>{hub.name}</h3><p>{hub.description||"Sistema operacional próprio do setor, integrado ao ecossistema SuperBI 360 | GSU."}</p></div><div className="hub-meta"><span><b>Status</b>{"status" in hub?hub.status:"Integrado"}</span><span><b>Integração</b>{"integration_type" in hub?(hub.integration_type||"LINK_EXTERNO"):"Produto setorial"}</span></div>{!demo&&url?<a href={url} target="_blank" rel="noopener noreferrer">Abrir Hub ↗</a>:<button disabled>Produto setorial integrado ao ecossistema</button>}</article>;
 }
 
 function Sectors({ go,user }: { go:(p:string)=>void;user:User }) {
@@ -165,7 +168,7 @@ function Sectors({ go,user }: { go:(p:string)=>void;user:User }) {
   return <><PageTitle eyebrow="ARQUITETURA INSTITUCIONAL" title="Setores e hubs" text="Competências organizadas em experiências digitais, com transparência sobre cada fonte."/>
     <div className="toolbar"><div className="search">⌕<input aria-label="Pesquisar setor" placeholder="Pesquisar setor ou competência..." value={query} onChange={e=>setQuery(e.target.value)}/></div><span>{filtered.length} setores</span></div>
     <div className="sector-grid">{filtered.map((s,i)=><button className="sector-card" key={s.id} onClick={()=>go(`/radar360/setores/${s.slug}`)}><div className="sector-head"><i>{s.icon}</i><span className={`status s${i%4}`}>{s.status}</span></div><h3>{s.shortName}</h3><b>{s.name}</b><p>{s.description}</p><footer><span>{(user.role==="VISITANTE"?demoHubCatalog.some(h=>h.sector_id===s.shortName):hubs.some(h=>h.sectors?.code===s.shortName))?"Produto setorial integrado":`${s.menu.length} áreas funcionais`}</span><b>→</b></footer></button>)}</div>
-    <PageTitle eyebrow="PRODUTOS SETORIAIS" title="Hubs integrados" text="Os hubs apoiam a operação detalhada; o RADAR 360 mantém a visão institucional integrada."/>
+    <PageTitle eyebrow="PRODUTOS SETORIAIS" title="Hubs integrados" text="Os hubs apoiam a operação detalhada; o SuperBI 360 | GSU mantém a visão institucional integrada."/>
     <div className="hub-card-grid">{(user.role==="VISITANTE"?demoHubCatalog:hubs).map(h=><HubAccessCard key={h.id} hub={h} demo={user.role==="VISITANTE"}/>)}</div></>;
 }
 
@@ -218,7 +221,7 @@ function UsersAdmin() {
     setNewPassword("");setConfirmPassword("");setPasswordSuccess(`Senha de ${passwordUser.email} atualizada com segurança.`);setPasswordLoading(false);
   };
   const filtered=items.filter(x=>(x.name+" "+x.email+" "+x.role).toLowerCase().includes(query.toLowerCase()));
-  return <><PageTitle eyebrow="ADMINISTRAÇÃO E RBAC" title="Usuários e acessos" text="Gerencie perfis, vínculos institucionais e o ciclo de acesso ao RADAR 360."/>
+  return <><PageTitle eyebrow="ADMINISTRAÇÃO E RBAC" title="Usuários e acessos" text="Gerencie perfis, vínculos institucionais e o ciclo de acesso ao SuperBI 360 | GSU."/>
     <div className="auth-notice"><i>⌁</i><div><b>Identidade institucional ativa</b><p>Os acessos abaixo vêm do Supabase Auth e obedecem às regras de segurança por perfil. Convites exigem o serviço administrativo protegido.</p></div><span>SUPABASE AUTH</span></div>
     {passwordUser&&<form className="admin-password-form" onSubmit={savePassword}><header><div><b>Definir nova senha</b><p>{passwordUser.name} · {passwordUser.email}</p></div><button type="button" onClick={()=>setPasswordUser(null)} aria-label="Fechar">×</button></header><div className="admin-password-fields"><label>Nova senha<input type="password" autoComplete="new-password" value={newPassword} onChange={event=>setNewPassword(event.target.value)} required minLength={10}/></label><label>Confirmar nova senha<input type="password" autoComplete="new-password" value={confirmPassword} onChange={event=>setConfirmPassword(event.target.value)} required minLength={10}/></label><button type="submit" disabled={passwordLoading}>{passwordLoading?"Salvando...":"Atualizar senha"}</button></div><small>A senha é enviada diretamente ao Supabase Auth e não é armazenada no perfil nem em logs.</small>{passwordError&&<p className="account-error">{passwordError}</p>}{passwordSuccess&&<p className="account-success">{passwordSuccess}</p>}</form>}
     <div className="access-kpis"><div><span>Usuários cadastrados</span><b>{items.length}</b></div><div><span>Acessos ativos</span><b>{items.filter(x=>x.active).length}</b></div><div><span>Acessos suspensos</span><b>{items.filter(x=>!x.active).length}</b></div><div><span>Perfis institucionais</span><b>100</b></div></div>
@@ -287,7 +290,7 @@ function Demands({user,recordType,go}:{user:User;recordType?:string;go:(path:str
 
 function ModulePage({ path, go }: { path:string; go:(p:string)=>void }) {
   const denied=path==="/denied";
-  return <><PageTitle eyebrow={denied?"CONTROLE DE ACESSO":"NAVEGAÇÃO"} title={denied?"Acesso não autorizado":"Página não encontrada"} text={denied?"Seu perfil institucional não possui permissão para abrir esta área.":"A rota informada não corresponde a um módulo do RADAR 360."}/><section className="module-hero"><div className="orb"><Logo compact/></div><h2>{denied?"Conteúdo protegido por perfil e RLS":"Vamos voltar ao ambiente institucional"}</h2><p>{denied?"Nenhum dado foi carregado. Solicite ao administrador uma revisão do vínculo caso este acesso seja necessário.":"Use a navegação principal ou retorne à visão geral."}</p><div className="module-actions"><button onClick={()=>go("/dashboard")}>Voltar à visão geral</button><button onClick={()=>go("/radar360/sobre")}>Sobre o RADAR 360</button></div></section></>;
+  return <><PageTitle eyebrow={denied?"CONTROLE DE ACESSO":"NAVEGAÇÃO"} title={denied?"Acesso não autorizado":"Página não encontrada"} text={denied?"Seu perfil institucional não possui permissão para abrir esta área.":"A rota informada não corresponde a um módulo do SuperBI 360 | GSU."}/><section className="module-hero"><div className="orb"><Logo compact/></div><h2>{denied?"Conteúdo protegido por perfil e RLS":"Vamos voltar ao ambiente institucional"}</h2><p>{denied?"Nenhum dado foi carregado. Solicite ao administrador uma revisão do vínculo caso este acesso seja necessário.":"Use a navegação principal ou retorne à Visão Regional 360."}</p><div className="module-actions"><button onClick={()=>go("/dashboard")}>Voltar à Visão Regional 360</button><button onClick={()=>go("/radar360/sobre")}>Sobre o SuperBI 360 | GSU</button></div></section></>;
 }
 
 function PageTitle({eyebrow,title,text,badge}:{eyebrow:string;title:string;text:string;badge?:string}) {
@@ -311,13 +314,13 @@ function AppShell({ user, onLogout }: { user:User; onLogout:()=>void }) {
   const school=useMemo(()=>schoolPool.find(s=>path.startsWith(`/radar360/escolas/${s.slug}`)),[path,schoolPool]);
   const itemSegment=path.startsWith("/radar360/itens/")?path.split("/").pop()||"":"";const itemTypes=["demanda","acao","acompanhamento","projeto","pendencia","ocorrencia"];const itemType=itemTypes.includes(itemSegment)?itemSegment.toUpperCase():undefined;const itemId=itemSegment&&!itemType?itemSegment:undefined;
   const schoolSelf:School={id:user.schoolId||"",name:"Minha Escola",slug:"",pei:false,status:"ativa"};
-  const content=path==="/dashboard"||path==="/"?<Overview user={user} go={go}/>:path==="/radar360"?<Radar360Module user={user} go={go}/>:path==="/radar360/meu-setor"?<ManagementSectorDashboard user={user}/>:path==="/radar360/minha-escola"?<SchoolView school={schoolSelf} user={user}/>:path==="/radar360/usuarios"?<UsersAdmin/>:path==="/radar360/demandas"?<Demands user={user} recordType="DEMANDA" go={go}/>:itemId?<ItemDetailModule id={itemId} user={user} go={go}/>:path==="/radar360/itens"||itemType?<Demands user={user} recordType={itemType} go={go}/>:path==="/radar360/setores"?<Sectors go={go} user={user}/>:sector?<SectorView sector={sector} user={user}/>:path==="/radar360/escolas"?<Schools go={go} user={user}/>:school?<SchoolView school={school} user={user}/>:path==="/radar360/biguarulho"?<BigModule/>:path==="/radar360/integracao"?<MdiModule/>:path==="/radar360/comunica"?<CommunicaModule user={user}/>:path==="/radar360/evidencias"?<EvidenceModule user={user}/>:path==="/radar360/dirigente"?<ExecutiveModule user={user} mode="ADMIN"/>:path==="/radar360/gestao"?<ExecutiveModule user={user} mode="GESTAO"/>:path==="/radar360/matriz"?<IntegrationMatrixModule/>:path==="/radar360/acordos"?<AgreementsModule/>:path==="/radar360/sobre"?<AboutModule/>:path==="/acesso-negado"?<ModulePage path="/denied" go={go}/>:<ModulePage path={path} go={go}/>;
-  const managementNav=[["⌂","Visão geral","/dashboard"],["◉","Radar 360","/radar360"],["◆","Meu Setor","/radar360/meu-setor"],["▦","Setores e Hubs","/radar360/setores"],["◆","BIGuarulhosSul","/radar360/biguarulho"],["↗","Integração! MDI","/radar360/integracao"],["◫","Comunica!","/radar360/comunica"],["✓","Evidências","/radar360/evidencias"],["◈","Painel da Gestão","/radar360/gestao"],["⌂","Painel das Escolas","/radar360/escolas"],["≋","Demandas","/radar360/demandas"],["⊞","Matriz de Integração","/radar360/matriz"],["≋","Acordos","/radar360/acordos"],["ⓘ","Sobre","/radar360/sobre"]] as const;
+  const content=!canAccess(user.role,path)?<ModulePage path="/denied" go={go}/>:path==="/dashboard"||path==="/"?<Overview user={user} go={go}/>:path===PAINEL_MDI_ROUTE?<PainelMdiModule go={go}/>:path==="/radar360"?<Radar360Module user={user} go={go}/>:path==="/radar360/meu-setor"?<ManagementSectorDashboard user={user}/>:path==="/radar360/minha-escola"?<SchoolView school={schoolSelf} user={user}/>:path==="/radar360/usuarios"?<UsersAdmin/>:path==="/radar360/demandas"?<Demands user={user} recordType="DEMANDA" go={go}/>:itemId?<ItemDetailModule id={itemId} user={user} go={go}/>:path==="/radar360/itens"||itemType?<Demands user={user} recordType={itemType} go={go}/>:path==="/radar360/setores"?<Sectors go={go} user={user}/>:sector?<SectorView sector={sector} user={user}/>:path==="/radar360/escolas"?<Schools go={go} user={user}/>:school?<SchoolView school={school} user={user}/>:path==="/radar360/biguarulho"?<BigModule/>:path==="/radar360/integracao"?<MdiModule/>:path==="/radar360/comunica"?<CommunicaModule user={user}/>:path==="/radar360/evidencias"?<EvidenceModule user={user}/>:path==="/radar360/dirigente"?<ExecutiveModule user={user} mode="ADMIN"/>:path==="/radar360/gestao"?<ExecutiveModule user={user} mode="GESTAO"/>:path==="/radar360/matriz"?<IntegrationMatrixModule/>:path==="/radar360/acordos"?<AgreementsModule/>:path==="/radar360/sobre"?<AboutModule/>:path==="/acesso-negado"?<ModulePage path="/denied" go={go}/>:<ModulePage path={path} go={go}/>;
+  const managementNav=[["⌂","Visão Regional 360","/dashboard"],["◉","SuperBI 360 | GSU","/radar360"],["◆","Meu Setor","/radar360/meu-setor"],["▦","Setores e Hubs","/radar360/setores"],["◆","BIGuarulhosSul","/radar360/biguarulho"],["↗","Integração! MDI","/radar360/integracao"],["◫","Comunica!","/radar360/comunica"],["✓","Evidências","/radar360/evidencias"],["◇","Painel MDI",PAINEL_MDI_ROUTE],["◈","Painel da Gestão","/radar360/gestao"],["⌂","Painel das Escolas","/radar360/escolas"],["≋","Demandas","/radar360/demandas"],["⊞","Matriz de Integração","/radar360/matriz"],["≋","Acordos","/radar360/acordos"],["ⓘ","Sobre","/radar360/sobre"]] as const;
   const schoolNav=[["⌂","Minha Escola","/radar360/minha-escola"],["◈","Visão geral","/dashboard"],["≋","Demandas","/radar360/demandas"],["◆","Acompanhamentos","/radar360/itens/acompanhamento"],["✓","Evidências","/radar360/evidencias"],["◫","Devolutivas","/radar360/evidencias"],["◉","Orientações","/radar360/comunica"],["▦","Documentos","/radar360/comunica"],["ⓘ","Sobre","/radar360/sobre"]] as const;
-  const visitorNav=[["⌂","Visão demonstrativa","/dashboard"],["◉","Radar 360 Demo","/radar360"],["▦","Setores Demo","/radar360/setores"],["⌂","Escolas Demo","/radar360/escolas"],["☷","Itens Demo","/radar360/itens"],["◈","Indicadores Demo","/radar360/gestao"],["ⓘ","Sobre","/radar360/sobre"]] as const;
+  const visitorNav=[["⌂","Visão demonstrativa","/dashboard"],["◉","SuperBI 360 | GSU — Demo","/radar360"],["▦","Setores Demo","/radar360/setores"],["⌂","Escolas Demo","/radar360/escolas"],["☷","Itens Demo","/radar360/itens"],["◈","Indicadores Demo","/radar360/gestao"],["ⓘ","Sobre","/radar360/sobre"]] as const;
   const visibleNav=user.role==="GESTAO"?managementNav:user.role==="ESCOLA"?schoolNav:user.role==="VISITANTE"?visitorNav:nav.filter(n=>n[3].includes(user.role as never));
   return <div className="app-shell">
-    <aside className={`sidebar ${mobile?"open":""}`}><Logo/><button className="close-menu" onClick={()=>setMobile(false)}>×</button><span className="nav-heading">MENU PRINCIPAL</span><nav>{visibleNav.map(n=><button key={n[2]} className={path===n[2]||n[2]!=="/radar360"&&path.startsWith(n[2])?"active":""} onClick={()=>go(n[2])}><i>{n[0]}</i><span>{n[1]}</span>{"Radar 360"===n[1]&&<em>NOVO</em>}</button>)}</nav><div className="sidebar-foot"><span>URE GUARULHOS SUL</span><b>Portal Comunica! · v1.0</b></div></aside>
+    <aside className={`sidebar ${mobile?"open":""}`}><Logo/><button className="close-menu" onClick={()=>setMobile(false)}>×</button><span className="nav-heading">MENU PRINCIPAL</span><nav>{visibleNav.map(n=>n[2]===PAINEL_MDI_ROUTE?<div className="nav-subgroup" key={n[2]}><span>PAINÉIS ESTRATÉGICOS</span><button className={path===n[2]?"active":""} onClick={()=>go(n[2])} title="Painel Integrado de acompanhamento estratégico da URE Guarulhos Sul"><i>{n[0]}</i><span>{n[1]}</span></button></div>:<button key={n[2]} className={path===n[2]||n[2]!=="/radar360"&&path.startsWith(n[2])?"active":""} onClick={()=>go(n[2])}><i>{n[0]}</i><span>{n[1]}</span>{"SuperBI 360 | GSU"===n[1]&&<em>NOVO</em>}</button>)}</nav><div className="sidebar-foot"><span>URE GUARULHOS SUL</span><b>SuperBI 360 | GSU</b></div></aside>
     <div className="app-main"><header className="topbar"><button className="hamburger" onClick={()=>setMobile(true)}>☰</button><div className="greeting"><span>Olá, {user.name.split(" ")[0]}</span><b>{new Intl.DateTimeFormat("pt-BR",{weekday:"long",day:"2-digit",month:"long"}).format(new Date())}</b></div>
       <div className="top-actions">{user.role==="VISITANTE"&&<span className="demo-badge">◎ MODO VISITANTE · DADOS ILUSTRATIVOS</span>}<button className="bell">♢<i/></button>{user.role!=="VISITANTE"?<div className="user-chip"><span>{user.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span><p><b>{user.name}</b><small>{user.institutionalProfileName||user.role}</small></p></div>:<div className="user-chip"><span>VI</span><p><b>Visitante</b><small>Ambiente demonstrativo</small></p></div>}<button className="logout" onClick={onLogout}>Sair ↗</button></div></header>
       {user.role==="VISITANTE"&&<div className="mobile-demo">Ambiente demonstrativo · nenhum dado real</div>}

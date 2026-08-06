@@ -3,12 +3,14 @@ import type { Role, User } from "../types";
 export type ResourceAction = "read" | "create" | "update" | "delete" | "manage";
 
 export const routeAccess: Record<string, Role[]> = {
+  "/evidencias/paineis-estrategicos/painel-mdi": ["ADMIN", "GESTAO"],
   "/radar360/dirigente": ["ADMIN"],
   "/radar360/gestao": ["ADMIN", "GESTAO", "VISITANTE"],
   "/radar360/escolas": ["ADMIN", "GESTAO", "ESCOLA", "VISITANTE"],
   "/radar360/demandas": ["ADMIN", "GESTAO", "ESCOLA", "VISITANTE"],
   "/radar360/matriz": ["ADMIN", "GESTAO"],
   "/radar360/acordos": ["ADMIN", "GESTAO"],
+  "/radar360/integracao": ["ADMIN", "GESTAO"],
   "/radar360/usuarios": ["ADMIN"],
 };
 
