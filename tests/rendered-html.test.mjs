@@ -43,4 +43,7 @@ test("keeps Supabase credentials out of tracked source", async () => {
 test("renders password recovery deep links", async () => {
   const response = await render("/redefinir-senha");
   assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Definir nova senha/i);
+  assert.match(html, /Validando o link de recupera/i);
 });

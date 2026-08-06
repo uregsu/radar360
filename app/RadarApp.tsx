@@ -8,6 +8,7 @@ import { PAINEL_MDI_ROUTE } from "../config/products";
 import { demoData } from "../lib/demo/data";
 import { demoProvider } from "../lib/demo/provider";
 import { canAccess } from "../lib/permissions";
+import { getPasswordRequirements, isStrongPassword, maskEmail, PASSWORD_MIN_LENGTH } from "../lib/password-policy";
 import { getAuthErrorMessage } from "../lib/supabase/auth-errors";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { Role, School, Sector, User } from "../types";
@@ -84,6 +85,133 @@ function Login({ onDemo, onAuthenticated }: { onDemo: () => void; onAuthenticate
       </form>
     </section>
   </main>
+}
+
+export function RecoveryPassword() {
+  const [ready, setReady] = useState(false);
+  const [recoverySession, setRecoverySession] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const requirements = getPasswordRequirements(newPassword);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    let active = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (active && event === "PASSWORD_RECOVERY" && session) {
+        setRecoverySession(true);
+        setError("");
+        setReady(true);
+      }
+    });
+
+    const validateRecoveryLink = async () => {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+      const recoveryMarker = hash.get("type") === "recovery";
+
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (!active) return;
+        if (exchangeError) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!active) return;
+          if (session) setRecoverySession(true);
+          else setError("O link de redefinição é inválido ou expirou. Solicite um novo link à administradora.");
+        } else setRecoverySession(true);
+        setReady(true);
+        return;
+      }
+
+      if (recoveryMarker) {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (!active) return;
+        if (sessionError || !session) setError("O link de redefinição é inválido ou expirou. Solicite um novo link à administradora.");
+        else setRecoverySession(true);
+        setReady(true);
+        return;
+      }
+
+      setError("Abra esta página pelo link de redefinição enviado pelo Supabase.");
+      setReady(true);
+    };
+
+    void validateRecoveryLink();
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+
+  useEffect(() => {
+    if (!success) return;
+    const timer = window.setTimeout(() => window.location.replace("/login"), 1800);
+    return () => window.clearTimeout(timer);
+  }, [success]);
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+    if (!recoverySession) {
+      setError("A sessão de redefinição é inválida ou expirou.");
+      return;
+    }
+    if (!isStrongPassword(newPassword)) {
+      setError("A nova senha ainda não atende a todos os requisitos de segurança.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("A confirmação não corresponde à nova senha.");
+      return;
+    }
+
+    setLoading(true);
+    const supabase = getSupabaseBrowserClient();
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) {
+      const message = /session|jwt|expired/i.test(updateError.message)
+        ? "A sessão de redefinição expirou. Solicite um novo link à administradora."
+        : /weak|password|characters/i.test(updateError.message)
+          ? "A senha foi recusada pela política de segurança. Escolha outra senha."
+          : "Não foi possível atualizar a senha. Verifique a conexão e tente novamente.";
+      setError(message);
+      setLoading(false);
+      return;
+    }
+
+    setNewPassword("");
+    setConfirmPassword("");
+    setSuccess(true);
+    await supabase.auth.signOut();
+    setLoading(false);
+  };
+
+  return <main className="login-shell recovery-shell">
+    <div className="ambient ambient-a"/><div className="ambient ambient-b"/>
+    <section className="login-story recovery-story">
+      <Logo/>
+      <div className="story-copy"><span className="eyebrow"><i/> ACESSO INSTITUCIONAL</span><h1>Crie uma nova<br/>senha de <span>acesso.</span></h1><p>Use o link de recuperação recebido para proteger sua conta institucional.</p></div>
+      <footer>URE GUARULHOS SUL <span/> SECRETARIA DA EDUCAÇÃO</footer>
+    </section>
+    <section className="login-side">
+      <form className="login-card recovery-card" onSubmit={submit}>
+        <div className="secure"><span>◆</span> REDEFINIÇÃO SEGURA</div>
+        <h2>Definir nova senha</h2>
+        <p>{ready ? recoverySession ? "Informe e confirme sua nova senha." : "Não foi possível validar este acesso." : "Validando o link de recuperação..."}</p>
+        {recoverySession && !success && <>
+          <label>Nova senha<div className="input-wrap"><span>⌁</span><input aria-label="Nova senha" value={newPassword} onChange={event=>setNewPassword(event.target.value)} type="password" autoComplete="new-password" required minLength={PASSWORD_MIN_LENGTH}/></div></label>
+          <label>Confirmar nova senha<div className="input-wrap"><span>⌁</span><input aria-label="Confirmar nova senha" value={confirmPassword} onChange={event=>setConfirmPassword(event.target.value)} type="password" autoComplete="new-password" required minLength={PASSWORD_MIN_LENGTH}/></div></label>
+          <ul className="password-requirements">{requirements.map(requirement=><li className={requirement.valid?"valid":""} key={requirement.key}><span>{requirement.valid?"✓":"○"}</span>{requirement.label}</li>)}</ul>
+        </>}
+        {error && <div className="login-error" role="alert">{error}</div>}
+        {success && <div className="login-success" role="status">Senha atualizada. Você será direcionado ao login.</div>}
+        {recoverySession && !success && <button className="primary-btn" disabled={loading}>{loading ? "Atualizando..." : <>Salvar nova senha <span>→</span></>}</button>}
+        {!recoverySession && ready && <button type="button" className="primary-btn" onClick={()=>window.location.replace("/login")}>Voltar ao login</button>}
+        <small className="privacy">A senha é processada pelo Supabase Auth e não é armazenada no perfil.</small>
+      </form>
+    </section>
+  </main>;
 }
 
 function DataProvenance({ demo = false }: { demo?: boolean }) {
@@ -198,32 +326,45 @@ function UsersAdmin() {
   const [passwordUser,setPasswordUser]=useState<AccessUser|null>(null);
   const [newPassword,setNewPassword]=useState("");
   const [confirmPassword,setConfirmPassword]=useState("");
-  const [passwordLoading,setPasswordLoading]=useState(false);
+  const [passwordOperation,setPasswordOperation]=useState<""|"password"|"recovery">("");
   const [passwordError,setPasswordError]=useState("");
   const [passwordSuccess,setPasswordSuccess]=useState("");
   const load=async()=>{setLoading(true);const {data}=await getSupabaseBrowserClient().from("profiles").select("id,user_id,name,email,role,sector_id,school_id,active,institutional_profiles(name,short_name)").order("name");setItems((data??[]) as unknown as AccessUser[]);setLoading(false)};
   useEffect(()=>{queueMicrotask(()=>void load())},[]);
   const toggle=async(item:AccessUser)=>{const {error}=await getSupabaseBrowserClient().from("profiles").update({active:!item.active}).eq("id",item.id);if(!error)await load()};
-  const choosePasswordUser=(item:AccessUser)=>{setPasswordUser(item);setNewPassword("");setConfirmPassword("");setPasswordError("");setPasswordSuccess("")};
+  const choosePasswordUser=(item:AccessUser)=>{setPasswordUser(item);setNewPassword("");setConfirmPassword("");setPasswordError("");setPasswordSuccess("");setPasswordOperation("")};
+  const closePasswordDialog=()=>{if(passwordOperation)return;setPasswordUser(null);setNewPassword("");setConfirmPassword("");setPasswordError("");setPasswordSuccess("")};
+  const readFunctionError=async(error:unknown,fallback:string)=>{
+    const context=(error as {context?:Response})?.context;
+    if(context){try{const body=await context.clone().json() as {error?:string};if(body.error)return body.error}catch{/* resposta sem JSON */}}
+    return fallback;
+  };
   const savePassword=async(event:React.FormEvent)=>{
     event.preventDefault();setPasswordError("");setPasswordSuccess("");
     if(!passwordUser?.user_id){setPasswordError("Este perfil ainda não está vinculado ao Supabase Auth.");return}
-    if(newPassword.length<10||!/[a-z]/.test(newPassword)||!/[A-Z]/.test(newPassword)||!/\d/.test(newPassword)){setPasswordError("Use ao menos 10 caracteres, com maiúscula, minúscula e número.");return}
+    if(!isStrongPassword(newPassword)){setPasswordError("A nova senha ainda não atende a todos os requisitos de segurança.");return}
     if(newPassword!==confirmPassword){setPasswordError("A confirmação não corresponde à nova senha.");return}
-    setPasswordLoading(true);
-    const {error}=await getSupabaseBrowserClient().functions.invoke("admin-set-password",{body:{targetUserId:passwordUser.user_id,newPassword}});
+    setPasswordOperation("password");
+    const {error}=await getSupabaseBrowserClient().functions.invoke("admin-set-password",{body:{action:"set_password",targetUserId:passwordUser.user_id,newPassword}});
     if(error){
-      let message="Não foi possível alterar a senha. Verifique sua sessão administrativa.";
-      const context=(error as {context?:Response}).context;
-      if(context){try{const body=await context.clone().json() as {error?:string};if(body.error)message=body.error}catch{/* resposta sem JSON */}}
-      setPasswordError(message);setPasswordLoading(false);return;
+      setPasswordError(await readFunctionError(error,"Não foi possível alterar a senha. Verifique sua sessão administrativa."));setPasswordOperation("");return;
     }
-    setNewPassword("");setConfirmPassword("");setPasswordSuccess(`Senha de ${passwordUser.email} atualizada com segurança.`);setPasswordLoading(false);
+    setNewPassword("");setConfirmPassword("");setPasswordSuccess("Senha provisória definida com segurança. O valor não foi armazenado nem exibido novamente.");setPasswordOperation("");
   };
+  const sendRecovery=async()=>{
+    setPasswordError("");setPasswordSuccess("");
+    if(!passwordUser?.user_id){setPasswordError("Este perfil ainda não está vinculado ao Supabase Auth.");return}
+    setPasswordOperation("recovery");
+    const redirectTo=`${window.location.origin}/redefinir-senha`;
+    const {error}=await getSupabaseBrowserClient().functions.invoke("admin-set-password",{body:{action:"send_recovery",targetUserId:passwordUser.user_id,redirectTo}});
+    if(error){setPasswordError(await readFunctionError(error,"Não foi possível solicitar a redefinição. Tente novamente em alguns minutos."));setPasswordOperation("");return}
+    setPasswordSuccess("Solicitação processada. Se o usuário estiver apto a receber mensagens, o Supabase enviará as instruções de redefinição.");setPasswordOperation("");
+  };
+  const passwordRequirements=getPasswordRequirements(newPassword);
   const filtered=items.filter(x=>(x.name+" "+x.email+" "+x.role).toLowerCase().includes(query.toLowerCase()));
   return <><PageTitle eyebrow="ADMINISTRAÇÃO E RBAC" title="Usuários e acessos" text="Gerencie perfis, vínculos institucionais e o ciclo de acesso ao SuperBI 360 | GSU."/>
     <div className="auth-notice"><i>⌁</i><div><b>Identidade institucional ativa</b><p>Os acessos abaixo vêm do Supabase Auth e obedecem às regras de segurança por perfil. Convites exigem o serviço administrativo protegido.</p></div><span>SUPABASE AUTH</span></div>
-    {passwordUser&&<form className="admin-password-form" onSubmit={savePassword}><header><div><b>Definir nova senha</b><p>{passwordUser.name} · {passwordUser.email}</p></div><button type="button" onClick={()=>setPasswordUser(null)} aria-label="Fechar">×</button></header><div className="admin-password-fields"><label>Nova senha<input type="password" autoComplete="new-password" value={newPassword} onChange={event=>setNewPassword(event.target.value)} required minLength={10}/></label><label>Confirmar nova senha<input type="password" autoComplete="new-password" value={confirmPassword} onChange={event=>setConfirmPassword(event.target.value)} required minLength={10}/></label><button type="submit" disabled={passwordLoading}>{passwordLoading?"Salvando...":"Atualizar senha"}</button></div><small>A senha é enviada diretamente ao Supabase Auth e não é armazenada no perfil nem em logs.</small>{passwordError&&<p className="account-error">{passwordError}</p>}{passwordSuccess&&<p className="account-success">{passwordSuccess}</p>}</form>}
+    {passwordUser&&<div className="admin-password-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closePasswordDialog()}}><form className="admin-password-dialog" role="dialog" aria-modal="true" aria-labelledby="admin-password-title" onSubmit={savePassword}><header><div><b id="admin-password-title">Definir senha provisória</b><p>{passwordUser.name} · {maskEmail(passwordUser.email)}</p></div><button type="button" onClick={closePasswordDialog} disabled={Boolean(passwordOperation)} aria-label="Fechar">×</button></header><p className="admin-password-guidance">Use esta opção somente quando for necessário entregar uma credencial provisória. O usuário também pode receber um link oficial para criar a própria senha.</p><div className="admin-password-fields"><label>Nova senha<input aria-label="Nova senha provisória" type="password" autoComplete="new-password" value={newPassword} onChange={event=>setNewPassword(event.target.value)} required minLength={PASSWORD_MIN_LENGTH}/></label><label>Confirmar nova senha<input aria-label="Confirmar nova senha provisória" type="password" autoComplete="new-password" value={confirmPassword} onChange={event=>setConfirmPassword(event.target.value)} required minLength={PASSWORD_MIN_LENGTH}/></label></div><ul className="password-requirements admin-requirements">{passwordRequirements.map(requirement=><li className={requirement.valid?"valid":""} key={requirement.key}><span>{requirement.valid?"✓":"○"}</span>{requirement.label}</li>)}</ul><small>A senha segue diretamente para o Supabase Auth por uma função administrativa protegida. Não é salva em perfis, auditoria ou armazenamento local.</small>{passwordError&&<p className="account-error" role="alert">{passwordError}</p>}{passwordSuccess&&<p className="account-success" role="status">{passwordSuccess}</p>}<div className="admin-password-actions"><button type="button" className="secondary-action" onClick={()=>void sendRecovery()} disabled={Boolean(passwordOperation)}>{passwordOperation==="recovery"?"Enviando...":"Enviar link de redefinição"}</button><button type="button" className="cancel-action" onClick={closePasswordDialog} disabled={Boolean(passwordOperation)}>Cancelar</button><button type="submit" className="primary-action" disabled={Boolean(passwordOperation)}>{passwordOperation==="password"?"Salvando...":"Definir senha"}</button></div></form></div>}
     <div className="access-kpis"><div><span>Usuários cadastrados</span><b>{items.length}</b></div><div><span>Acessos ativos</span><b>{items.filter(x=>x.active).length}</b></div><div><span>Acessos suspensos</span><b>{items.filter(x=>!x.active).length}</b></div><div><span>Perfis institucionais</span><b>100</b></div></div>
     <section className="access-panel"><header><div className="search">⌕<input aria-label="Pesquisar usuário" placeholder="Pesquisar nome, e-mail ou perfil..." value={query} onChange={e=>setQuery(e.target.value)}/></div></header>
       <div className="access-table"><div className="table-head"><span>USUÁRIO</span><span>PERFIL</span><span>VÍNCULO</span><span>STATUS</span><span>AÇÕES</span></div>{loading?<div className="no-records">Carregando usuários...</div>:filtered.length?filtered.map(item=><div className="table-row" key={item.id}><div className="access-user"><i>{item.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</i><p><b>{item.name}</b><span>{item.email}</span></p></div><span className={`role-pill r-${item.role.toLowerCase()}`}>{item.role}</span><span>{item.institutional_profiles?.short_name||item.institutional_profiles?.name||"Visão global"}</span><span className={`access-status ${item.active?"ativo":"inativo"}`}><i/>{item.active?"ativo":"inativo"}</span><div className="row-actions"><button onClick={()=>choosePasswordUser(item)} disabled={!item.user_id}>Definir senha</button><button onClick={()=>void toggle(item)}>{item.active?"Suspender":"Ativar"}</button></div></div>):<div className="no-records">Nenhum usuário cadastrado.</div>}</div>
