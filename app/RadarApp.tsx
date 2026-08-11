@@ -13,6 +13,7 @@ import { getAuthErrorMessage } from "../lib/supabase/auth-errors";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { Role, School, Sector, User } from "../types";
 import { AboutModule, AgreementsModule, BigModule, CommunicaModule, EvidenceModule, ExecutiveModule, IntegrationMatrixModule, ItemDetailModule, MdiModule, PainelMdiModule, Radar360Module } from "./RadarModules";
+import VisaoRegional360 from "./VisaoRegional360";
 
 const nav = [
   ["⌂","Visão geral","/dashboard",["ADMIN","GESTAO","ESCOLA","VISITANTE"]],
@@ -224,59 +225,7 @@ function DataProvenance({ demo = false }: { demo?: boolean }) {
 }
 
 function Overview({ user, go }: { user: User; go: (p:string)=>void }) {
-  const demo = user.role === "VISITANTE";
-  const [counts,setCounts]=useState({schools:0,sectors:0,items:0,evidences:0});
-  const [realItems,setRealItems]=useState<any[]>([]);const [realHistory,setRealHistory]=useState<any[]>([]);
-  useEffect(()=>{if(demo)return;let active=true;const load=async()=>{const supabase=getSupabaseBrowserClient();let itemQuery=supabase.from("institutional_items").select("id,sector_id,school_id,title,record_type,status,priority,due_date,updated_at,sectors(code),schools(name)").eq("active",true).order("updated_at",{ascending:false});if(user.role==="GESTAO"&&user.sectorId)itemQuery=itemQuery.eq("sector_id",user.sectorId);const [schoolResult,sectorResult,itemResult,evidenceResult]=await Promise.all([
-    supabase.from("schools").select("id",{count:"exact",head:true}),
-    supabase.from("sectors").select("id",{count:"exact",head:true}),
-    itemQuery,
-    supabase.from("evidences").select("id",{count:"exact",head:true}),
-  ]);const {data:history}=await supabase.from("institutional_item_history").select("id,event_type,created_at,institutional_items(title,sector_id)").order("created_at",{ascending:false}).limit(20);if(active){const rows=itemResult.data??[];const scopedHistory=(history??[]).filter((entry:any)=>user.role!=="GESTAO"||!user.sectorId||entry.institutional_items?.sector_id===user.sectorId).slice(0,6);setRealItems(rows);setRealHistory(scopedHistory);setCounts({schools:schoolResult.count??0,sectors:user.role==="GESTAO"&&user.sectorId?1:sectorResult.count??0,items:rows.filter(x=>!["CONCLUIDA","CANCELADA"].includes(x.status)).length,evidences:evidenceResult.count??0})}};void load();return()=>{active=false}},[demo,user.id,user.role,user.sectorId]);
-  const today=new Date().toISOString().slice(0,10);const realKpis=[
-    {label:user.role==="ESCOLA"?"Minha escola":user.role==="GESTAO"?"Escolas relacionadas":"Escolas autorizadas",value:String(user.role==="GESTAO"?new Set(realItems.map(x=>x.school_id).filter(Boolean)).size:counts.schools),trend:"Supabase",tone:"cyan"},
-    {label:"Setores visíveis",value:String(counts.sectors),trend:"RLS",tone:"green"},
-    {label:"Itens ativos",value:String(counts.items),trend:"dados reais",tone:"blue"},
-    {label:"Demandas",value:String(realItems.filter(x=>x.record_type==="DEMANDA").length),trend:"dados reais",tone:"violet"},
-    {label:"Ações",value:String(realItems.filter(x=>x.record_type==="ACAO").length),trend:"dados reais",tone:"cyan"},
-    {label:"Acompanhamentos",value:String(realItems.filter(x=>x.record_type==="ACOMPANHAMENTO").length),trend:"dados reais",tone:"green"},
-    {label:"Projetos",value:String(realItems.filter(x=>x.record_type==="PROJETO").length),trend:"dados reais",tone:"blue"},
-    {label:"Pendências",value:String(realItems.filter(x=>x.record_type==="PENDENCIA").length),trend:"dados reais",tone:"violet"},
-    {label:"Ocorrências",value:String(realItems.filter(x=>x.record_type==="OCORRENCIA").length),trend:"dados reais",tone:"cyan"},
-    {label:"Críticos",value:String(realItems.filter(x=>x.priority==="CRITICA").length),trend:"prioridade",tone:"violet"},
-    {label:"Vencidos",value:String(realItems.filter(x=>x.due_date&&x.due_date<today&&!["CONCLUIDA","CANCELADA"].includes(x.status)).length),trend:"prazo",tone:"blue"},
-    {label:"Evidências",value:String(counts.evidences),trend:"dados reais",tone:"green"},
-  ];const kpis=demo?demoData.kpis:user.role==="ESCOLA"?realKpis.filter(k=>["Minha escola","Demandas","Acompanhamentos","Evidências"].includes(k.label)):realKpis;
-  const actions=demo?demoData.actions:[];const updates=demo?demoData.updates:[];
-  return <>
-    <section className="hero">
-      <div><div className="breadcrumb">SuperBI 360 | GSU <span>/</span> VISÃO REGIONAL 360</div><h1>{user.role === "ESCOLA" ? "Painel da Escola" : "Visão Regional 360"}</h1>
-      <p>{demo ? "Conheça como decisões, setores e escolas se conectam em uma única visão institucional." : "Plataforma Integrada de Gestão, Evidências e Inteligência da URE Guarulhos Sul"}</p></div>
-      <button className="outline-btn" onClick={()=>go("/radar360/setores")}>Explorar ecossistema <span>→</span></button>
-    </section>
-    <div className="kpi-grid">{kpis.map((k,i)=><article className={`kpi ${k.tone}`} key={k.label}><div className="kpi-top"><span>{["⌂","⌘","◈","✓"][i%4]}</span><small>{k.trend}</small></div><strong>{k.value}</strong><p>{k.label}</p><i/></article>)}</div>
-    <div className="dashboard-grid">
-      <section className="panel span-2">
-        <header><div><span className="section-label">ACOMPANHAMENTO</span><h2>Ações em destaque</h2></div><button onClick={()=>go("/radar360/itens")}>Ver todas →</button></header>
-        <div className="actions">{demo?(actions.length?actions.map(a=><div className="action" key={a.title}><div className="action-icon">↗</div><div><b>{a.title}</b><span>{a.sector} · {a.status}</span><div className="progress"><i style={{width:`${a.progress}%`}}/></div></div><strong>{a.progress}%</strong></div>):null):realItems.length?realItems.slice(0,6).map(a=><button className="action real-action" key={a.id} onClick={()=>go(`/radar360/itens/${a.id}`)}><div className="action-icon">↗</div><div><b>{a.title}</b><span>{a.sectors?.code||"Regional"} · {a.record_type} · {a.status.replaceAll("_"," ")}</span></div><strong>→</strong></button>):<div className="no-records">Sem registros institucionais.</div>}</div>
-      </section>
-      <section className="panel">
-        <header><div><span className="section-label">AGORA NO SUPERBI</span><h2>Atualizações</h2></div></header>
-        <div className="updates">{demo?(updates.length?updates.map((u,i)=><div key={u.title}><i className={i===0?"active":""}/><p><b>{u.title}</b><span>{u.meta}</span></p></div>):null):realHistory.length?realHistory.map((u,i)=><div key={u.id}><i className={i===0?"active":""}/><p><b>{u.institutional_items?.title||"Item institucional"}</b><span>{u.event_type.replaceAll("_"," ")} · {new Date(u.created_at).toLocaleDateString("pt-BR")}</span></p></div>):<div className="no-records">Sem atualizações registradas.</div>}</div>
-      </section>
-      <section className="panel ecosystem span-2">
-        <header><div><span className="section-label">ECOSSISTEMA INTEGRADO</span><h2>Uma visão, múltiplas camadas</h2></div></header>
-        <div className="eco-flow"><div className="radar-node"><Logo compact/><b>SuperBI 360 | GSU</b><span>Hub institucional</span></div><div className="connector"/>{[["BI","BIGuarulhosSul","Inteligência de dados","/radar360/biguarulho"],["MDI","Painel MDI","Painel estratégico",PAINEL_MDI_ROUTE],["CO","Comunica!","Institucional","/radar360/comunica"]].filter(x=>x[0]!=="MDI"||canAccess(user.role,PAINEL_MDI_ROUTE)).map(x=><button key={x[0]} onClick={()=>go(x[3])}><i>{x[0]}</i><b>{x[1]}</b><span>{x[2]}</span></button>)}</div>
-      </section>
-      {canAccess(user.role,PAINEL_MDI_ROUTE)&&<article className="panel mdi-quick-card span-2"><div className="mdi-quick-icon" aria-hidden="true">◇</div><div><span className="section-label">PAINEL ESTRATÉGICO</span><h2>Painel MDI</h2><p>Visão estratégica integrada das dimensões pedagógica, administrativa, financeira, organizacional e de comunicação da URE Guarulhos Sul.</p></div><button onClick={()=>go(PAINEL_MDI_ROUTE)} aria-label="Acessar página interna do Painel MDI">Acessar painel <span aria-hidden="true">→</span></button></article>}
-      <section className="panel health">
-        <header><div><span className="section-label">INTEGRAÇÃO</span><h2>Saúde dos hubs</h2></div></header>
-        <div className="health-score"><div><b>{demo?"94":"3"}</b><span>{demo?"/100":" hubs"}</span></div><p><strong>{demo?"Operação estável":"Estrutura conectada"}</strong><span>{demo?"13 integrados · 4 em implantação":"3 links externos cadastrados"}</span></p></div>
-        <div className="legend"><span><i/>{demo?"Integrado":"Link externo"} <b>{demo?"13":"3"}</b></span><span><i/>{demo?"Em implantação":"Dados integrados"} <b>{demo?"4":"0"}</b></span></div>
-      </section>
-    </div>
-    <DataProvenance demo={demo}/>
-  </>;
+  return <VisaoRegional360 user={user} go={go} />;
 }
 
 type HubRow={id:string;name:string;external_url:string|null;description:string|null;status:string;integration_type:string|null;sector_id:string;sectors?:{code?:string;name?:string;slug?:string}|null};
