@@ -144,7 +144,7 @@ export default function VisaoRegional360({ user, go }: { user: User; go: (path: 
   ];
 
   return (
-    <div className="regional-360 superbi-ui">
+    <div className="regional-360 superbi-ui" aria-busy={loading}>
       <PageHeader
         eyebrow="Inteligência regional · URE Guarulhos Sul"
         title={user.role === "ESCOLA" ? "Visão da Escola 360" : "Visão Regional 360"}
@@ -170,17 +170,17 @@ export default function VisaoRegional360({ user, go }: { user: User; go: (path: 
             <span>Aguardando integração das dimensões do MDI</span>
           </div>
           <dl className="excellence-dimensions">
-            <div><dt>Apoio e Orientação Pedagógica</dt><dd>30%</dd></div>
-            <div><dt>Indicadores Educacionais</dt><dd>25%</dd></div>
-            <div><dt>Gestão Administrativo-Financeira</dt><dd>25%</dd></div>
-            <div><dt>Clima e Comunicação</dt><dd>20%</dd></div>
+            <div><dt>Apoio e Orientação Pedagógica</dt><dd>Em integração</dd></div>
+            <div><dt>Indicadores Educacionais</dt><dd>Em integração</dd></div>
+            <div><dt>Gestão Administrativo-Financeira</dt><dd>Em integração</dd></div>
+            <div><dt>Clima e Comunicação</dt><dd>Em integração</dd></div>
           </dl>
         </div>
       </section>
 
       <section className="regional-section" aria-label="Panorama Regional">
         <SectionHeader title="Panorama Regional" description="Dados consolidados disponíveis para o perfil atual." />
-        <div className="regional-metric-grid">
+        <div className="regional-metric-grid" aria-busy={loading} aria-live="polite">
           {loading ? Array.from({ length: 6 }, (_, index) => <Skeleton className="regional-metric-skeleton" key={index} />) : metrics.map((metric) => (
             <MetricCard key={metric.label} label={metric.label} value={demo ? "—" : metric.value} detail={demo ? "Sem dados disponíveis" : metric.detail} tone={metric.tone} />
           ))}
