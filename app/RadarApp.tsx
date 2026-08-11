@@ -13,6 +13,7 @@ import { getAuthErrorMessage } from "../lib/supabase/auth-errors";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { Role, School, Sector, User } from "../types";
 import { AboutModule, AgreementsModule, BigModule, CommunicaModule, EvidenceModule, ExecutiveModule, IntegrationMatrixModule, ItemDetailModule, MdiModule, PainelMdiModule, Radar360Module } from "./RadarModules";
+import { SuperBIBrand } from "./SuperBIBrand";
 import { AlertBanner, DataTable, EmptyState as SuperBIEmptyState, FilterBar, LoadingState, MetricCard, PageHeader, SearchInput, SectionHeader, StatusBadge as SuperBIStatusBadge } from "./SuperBIUI";
 import VisaoRegional360 from "./VisaoRegional360";
 
@@ -53,13 +54,6 @@ const navigationGroupOrder: Record<string, number> = {
   "Ecossistema": 3,
 };
 
-function Logo({ compact = false }: { compact?: boolean }) {
-  return <div className={`brand ${compact ? "compact" : ""}`}>
-    <div className="brand-mark"><i/><i/><i/></div>
-    {!compact && <div><b>SuperBI <em>360</em> | GSU</b><span>PORTAL COMUNICA!</span></div>}
-  </div>;
-}
-
 function Login({ onDemo, onAuthenticated }: { onDemo: () => void; onAuthenticated: () => Promise<void> }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,7 +71,7 @@ function Login({ onDemo, onAuthenticated }: { onDemo: () => void; onAuthenticate
   return <main className="login-shell">
     <div className="ambient ambient-a"/><div className="ambient ambient-b"/>
     <section className="login-story">
-      <Logo/>
+      <SuperBIBrand size="lg" tone="light" subtitle/>
       <div className="story-copy">
         <span className="eyebrow"><i/> ECOSSISTEMA PORTAL COMUNICA!</span>
         <h1>Visão integrada.<br/>Decisões mais <span>inteligentes.</span></h1>
@@ -206,7 +200,7 @@ export function RecoveryPassword() {
   return <main className="login-shell recovery-shell">
     <div className="ambient ambient-a"/><div className="ambient ambient-b"/>
     <section className="login-story recovery-story">
-      <Logo/>
+      <SuperBIBrand size="lg" tone="light" subtitle/>
       <div className="story-copy"><span className="eyebrow"><i/> ACESSO INSTITUCIONAL</span><h1>Crie uma nova<br/>senha de <span>acesso.</span></h1><p>Use o link de recuperação recebido para proteger sua conta institucional.</p></div>
       <footer>URE GUARULHOS SUL <span/> SECRETARIA DA EDUCAÇÃO</footer>
     </section>
@@ -397,7 +391,7 @@ function Demands({user,recordType,go}:{user:User;recordType?:string;go:(path:str
 
 function ModulePage({ path, go }: { path:string; go:(p:string)=>void }) {
   const denied=path==="/denied";
-  return <><PageTitle eyebrow={denied?"CONTROLE DE ACESSO":"NAVEGAÇÃO"} title={denied?"Acesso não autorizado":"Página não encontrada"} text={denied?"Seu perfil institucional não possui permissão para abrir esta área.":"A rota informada não corresponde a um módulo do SuperBI 360 | GSU."}/><section className="module-hero"><div className="orb"><Logo compact/></div><h2>{denied?"Conteúdo protegido por perfil e RLS":"Vamos voltar ao ambiente institucional"}</h2><p>{denied?"Nenhum dado foi carregado. Solicite ao administrador uma revisão do vínculo caso este acesso seja necessário.":"Use a navegação principal ou retorne à Visão Regional 360."}</p><div className="module-actions"><button onClick={()=>go("/dashboard")}>Voltar à Visão Regional 360</button><button onClick={()=>go("/radar360/sobre")}>Sobre o SuperBI 360 | GSU</button></div></section></>;
+  return <><PageTitle eyebrow={denied?"CONTROLE DE ACESSO":"NAVEGAÇÃO"} title={denied?"Acesso não autorizado":"Página não encontrada"} text={denied?"Seu perfil institucional não possui permissão para abrir esta área.":"A rota informada não corresponde a um módulo do SuperBI 360 | GSU."}/><section className="module-hero"><SuperBIBrand markOnly size="lg"/><h2>{denied?"Conteúdo protegido por perfil e RLS":"Vamos voltar ao ambiente institucional"}</h2><p>{denied?"Nenhum dado foi carregado. Solicite ao administrador uma revisão do vínculo caso este acesso seja necessário.":"Use a navegação principal ou retorne à Visão Regional 360."}</p><div className="module-actions"><button onClick={()=>go("/dashboard")}>Voltar à Visão Regional 360</button><button onClick={()=>go("/radar360/sobre")}>Sobre o SuperBI 360 | GSU</button></div></section></>;
 }
 
 function PageTitle({eyebrow,title,text,badge}:{eyebrow:string;title:string;text:string;badge?:string}) {
@@ -430,7 +424,7 @@ function AppShell({ user, onLogout }: { user:User; onLogout:()=>void }) {
   const currentNav=orderedNav.find(n=>path===n[2]||(n[2]!=="/radar360"&&path.startsWith(n[2])));
   const currentLabel=itemId?"Detalhe institucional":sector?sector.shortName:school?school.name:currentNav?.[1]||"SuperBI 360 | GSU";
   return <div className="app-shell">
-    <aside className={`sidebar ${mobile?"open":""}`} aria-label="Navegação principal"><Logo/><button className="close-menu" onClick={()=>setMobile(false)} aria-label="Fechar navegação">×</button><nav>{orderedNav.map((n,index)=>{const group=navigationGroup(n[2]);const previous=index?navigationGroup(orderedNav[index-1][2]):"";return <Fragment key={`${n[2]}-${n[1]}`}>{group!==previous&&<span className="nav-heading">{group}</span>}<button className={path===n[2]||n[2]!=="/radar360"&&path.startsWith(n[2])?"active":""} onClick={()=>go(n[2])} aria-current={path===n[2]?"page":undefined}><i aria-hidden="true">{n[0]}</i><span>{n[1]}</span></button></Fragment>})}</nav><div className="sidebar-foot"><span>URE GUARULHOS SUL</span><b>SuperBI 360 | GSU</b><small>Inteligência regional</small></div></aside>
+    <aside className={`sidebar ${mobile?"open":""}`} aria-label="Navegação principal"><SuperBIBrand size="sm" tone="light"/><button className="close-menu" onClick={()=>setMobile(false)} aria-label="Fechar navegação">×</button><nav>{orderedNav.map((n,index)=>{const group=navigationGroup(n[2]);const previous=index?navigationGroup(orderedNav[index-1][2]):"";return <Fragment key={`${n[2]}-${n[1]}`}>{group!==previous&&<span className="nav-heading">{group}</span>}<button className={path===n[2]||n[2]!=="/radar360"&&path.startsWith(n[2])?"active":""} onClick={()=>go(n[2])} aria-current={path===n[2]?"page":undefined}><i aria-hidden="true">{n[0]}</i><span>{n[1]}</span></button></Fragment>})}</nav><div className="sidebar-foot"><span>URE GUARULHOS SUL</span><b>SuperBI 360 | GSU</b><small>Inteligência regional</small></div></aside>
     <div className="app-main"><header className="topbar"><button className="hamburger" onClick={()=>setMobile(true)} aria-label="Abrir navegação">☰</button><div className="topbar-context"><span>SuperBI 360 | GSU</span><strong>{currentLabel}</strong></div><div className="topbar-date"><span>Hoje</span><strong>{new Intl.DateTimeFormat("pt-BR",{weekday:"long",day:"2-digit",month:"long"}).format(new Date())}</strong></div>
       <div className="top-actions">{user.role==="VISITANTE"&&<span className="demo-badge">MODO VISITANTE · DADOS ILUSTRATIVOS</span>}{user.role!=="VISITANTE"?<div className="user-chip"><span>{user.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span><p><b>{user.name}</b><small>{user.institutionalProfileName||user.role}</small></p></div>:<div className="user-chip"><span>VI</span><p><b>Visitante</b><small>Ambiente demonstrativo</small></p></div>}<button className="logout" onClick={onLogout}>Sair <span aria-hidden="true">↗</span></button></div></header>
       {user.role==="VISITANTE"&&<div className="mobile-demo">Ambiente demonstrativo · nenhum dado real</div>}
@@ -452,6 +446,6 @@ export default function RadarApp() {
   useEffect(()=>{const supabase=getSupabaseBrowserClient();queueMicrotask(()=>void loadAuthenticatedUser());const {data:{subscription}}=supabase.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT"){setUser(null);setReady(true)}});return()=>subscription.unsubscribe()},[]);
   const demo=()=>{setAccessError("");setUser({id:"demo",name:"Visitante",email:"",role:"VISITANTE",institutionalProfileName:"Ambiente demonstrativo",status:"ativo"});window.history.pushState({},"","/dashboard")};
   const logout=async()=>{if(user?.role!=="VISITANTE")await getSupabaseBrowserClient().auth.signOut();setUser(null);setAccessError("");window.history.pushState({},"","/login")};
-  if(!ready)return <div className="boot"><Logo/><span/></div>;
+  if(!ready)return <div className="boot"><SuperBIBrand size="lg" tone="light" subtitle/><span/></div>;
   return user?<AppShell user={user} onLogout={()=>void logout()}/>:<><Login onDemo={demo} onAuthenticated={loadAuthenticatedUser}/>{accessError&&<div className="access-error-banner">{accessError}</div>}</>;
 }

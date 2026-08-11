@@ -8,6 +8,7 @@ import { sectors as sectorCatalog } from "../config/sectors";
 import { painelMdi } from "../config/products";
 import { demoData } from "../lib/demo/data";
 import type { User } from "../types";
+import { SuperBIBrand } from "./SuperBIBrand";
 import { ActivityFeed, AlertBanner, DataTable, EmptyState as SuperBIEmptyState, ErrorState, FilterBar, LoadingState, MetricCard, PageHeader, SearchInput, SectionHeader, StatusBadge as SuperBIStatusBadge, StrategicCard, Timeline } from "./SuperBIUI";
 
 export function ModuleHeader({eyebrow,title,text}:{eyebrow:string;title:string;text:string}) {
@@ -15,7 +16,7 @@ export function ModuleHeader({eyebrow,title,text}:{eyebrow:string;title:string;t
 }
 function badgeTone(value:string){const normalized=value.toUpperCase();return normalized.includes("CRIT")||normalized.includes("CANCEL")||normalized.includes("INATIV")?"danger" as const:normalized.includes("ALTA")||normalized.includes("SUSP")||normalized.includes("IMPLANT")||normalized.includes("EM_INTEGRACAO")?"warning" as const:normalized.includes("CONCLU")||normalized.includes("DISPON")||normalized.includes("ATIV")||normalized.includes("INTEGRAD")?"success" as const:normalized.includes("ANDAMENTO")||normalized.includes("ANALISE")||normalized.includes("NOVA")?"info" as const:"neutral" as const}
 function EcosystemProductIntro({category,title,description,status,children}:{category:string;title:string;description:string;status:string;children?:ReactNode}){
-  return <section className="ecosystem-product-hero" aria-labelledby={`product-${title.replaceAll(" ","-").toLowerCase()}`}><div className="ecosystem-product-mark" aria-hidden="true">360°</div><div className="ecosystem-product-copy"><div className="ecosystem-product-meta"><span className="superbi-eyebrow">{category}</span><SuperBIStatusBadge tone={badgeTone(status)}>{status.replaceAll("_"," ")}</SuperBIStatusBadge></div><h2 id={`product-${title.replaceAll(" ","-").toLowerCase()}`}>{title}</h2><p>{description}</p>{children}</div></section>
+  return <section className="ecosystem-product-hero" aria-labelledby={`product-${title.replaceAll(" ","-").toLowerCase()}`}><SuperBIBrand className="ecosystem-product-brand" markOnly size="lg"/><div className="ecosystem-product-copy"><div className="ecosystem-product-meta"><span className="superbi-eyebrow">{category}</span><SuperBIStatusBadge tone={badgeTone(status)}>{status.replaceAll("_"," ")}</SuperBIStatusBadge></div><h2 id={`product-${title.replaceAll(" ","-").toLowerCase()}`}>{title}</h2><p>{description}</p>{children}</div></section>
 }
 export function ItemTable({items,onOpen}:{items:RadarItem[];onOpen?:(id:string)=>void}) {
   if(!items.length)return <SuperBIEmptyState title="Nenhum item encontrado" description="Não existem registros autorizados para os filtros atuais."/>;
@@ -128,7 +129,7 @@ export function AboutModule() {
     <ModuleHeader eyebrow="IDENTIDADE INSTITUCIONAL" title="Sobre o SuperBI 360 | GSU" text="Plataforma Integrada de Gestão, Evidências e Inteligência da URE Guarulhos Sul"/>
 
     <section className="about-intro" aria-labelledby="about-intro-title">
-      <div className="about-intro-mark" aria-hidden="true"><span>360°</span><i/></div>
+      <SuperBIBrand className="about-intro-brand" markOnly size="lg"/>
       <div className="about-intro-copy">
         <span className="section-label">VISÃO INSTITUCIONAL</span>
         <h2 id="about-intro-title">Informação conectada para enxergar a URE como um todo</h2>
