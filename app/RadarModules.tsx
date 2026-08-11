@@ -8,9 +8,10 @@ import { sectors as sectorCatalog } from "../config/sectors";
 import { painelMdi } from "../config/products";
 import { demoData } from "../lib/demo/data";
 import type { User } from "../types";
+import { PageHeader } from "./SuperBIUI";
 
 export function ModuleHeader({eyebrow,title,text}:{eyebrow:string;title:string;text:string}) {
-  return <section className="page-title"><span className="eyebrow"><i/> {eyebrow}</span><div><h1>{title}</h1></div><p>{text}</p></section>;
+  return <PageHeader eyebrow={eyebrow} title={title} description={text}/>;
 }
 export function KpiCard({label,value,tone=""}:{label:string;value:string|number;tone?:string}) {
   return <article className={`kpi ${tone}`}><strong>{value}</strong><p>{label}</p></article>;

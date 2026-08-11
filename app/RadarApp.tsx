@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { schools } from "../config/schools";
 import { sectors } from "../config/sectors";
 import { PAINEL_MDI_ROUTE } from "../config/products";
@@ -13,6 +13,7 @@ import { getAuthErrorMessage } from "../lib/supabase/auth-errors";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { Role, School, Sector, User } from "../types";
 import { AboutModule, AgreementsModule, BigModule, CommunicaModule, EvidenceModule, ExecutiveModule, IntegrationMatrixModule, ItemDetailModule, MdiModule, PainelMdiModule, Radar360Module } from "./RadarModules";
+import { PageHeader, StatusBadge as SuperBIStatusBadge } from "./SuperBIUI";
 import VisaoRegional360 from "./VisaoRegional360";
 
 const nav = [
@@ -37,6 +38,20 @@ const nav = [
 function pathNow() {
   return typeof window === "undefined" ? "/" : window.location.pathname;
 }
+
+function navigationGroup(route: string) {
+  if (["/dashboard", "/radar360", "/radar360/minha-escola", "/radar360/meu-setor"].includes(route)) return "Visão institucional";
+  if ([PAINEL_MDI_ROUTE, "/radar360/dirigente", "/radar360/gestao", "/radar360/escolas", "/radar360/matriz"].includes(route)) return "Painéis estratégicos";
+  if (route.startsWith("/radar360/demandas") || route.startsWith("/radar360/itens") || ["/radar360/evidencias", "/radar360/acordos", "/radar360/usuarios"].includes(route)) return "Operação e governança";
+  return "Ecossistema";
+}
+
+const navigationGroupOrder: Record<string, number> = {
+  "Visão institucional": 0,
+  "Painéis estratégicos": 1,
+  "Operação e governança": 2,
+  "Ecossistema": 3,
+};
 
 function Logo({ compact = false }: { compact?: boolean }) {
   return <div className={`brand ${compact ? "compact" : ""}`}>
@@ -384,7 +399,7 @@ function ModulePage({ path, go }: { path:string; go:(p:string)=>void }) {
 }
 
 function PageTitle({eyebrow,title,text,badge}:{eyebrow:string;title:string;text:string;badge?:string}) {
-  return <section className="page-title"><span className="eyebrow"><i/> {eyebrow}</span><div><h1>{title}</h1>{badge&&<em>{badge}</em>}</div><p>{text}</p></section>;
+  return <PageHeader eyebrow={eyebrow} title={title} description={text} actions={badge?<SuperBIStatusBadge tone="info">{badge}</SuperBIStatusBadge>:undefined}/>;
 }
 
 function ManagementSectorDashboard({user}:{user:User}) {
@@ -409,12 +424,15 @@ function AppShell({ user, onLogout }: { user:User; onLogout:()=>void }) {
   const schoolNav=[["⌂","Minha Escola","/radar360/minha-escola"],["◈","Visão geral","/dashboard"],["≋","Demandas","/radar360/demandas"],["◆","Acompanhamentos","/radar360/itens/acompanhamento"],["✓","Evidências","/radar360/evidencias"],["◫","Devolutivas","/radar360/evidencias"],["◉","Orientações","/radar360/comunica"],["▦","Documentos","/radar360/comunica"],["ⓘ","Sobre","/radar360/sobre"]] as const;
   const visitorNav=[["⌂","Visão demonstrativa","/dashboard"],["◉","SuperBI 360 | GSU — Demo","/radar360"],["▦","Setores Demo","/radar360/setores"],["⌂","Escolas Demo","/radar360/escolas"],["☷","Itens Demo","/radar360/itens"],["◈","Indicadores Demo","/radar360/gestao"],["ⓘ","Sobre","/radar360/sobre"]] as const;
   const visibleNav=user.role==="GESTAO"?managementNav:user.role==="ESCOLA"?schoolNav:user.role==="VISITANTE"?visitorNav:nav.filter(n=>n[3].includes(user.role as never));
+  const orderedNav=[...visibleNav].sort((a,b)=>navigationGroupOrder[navigationGroup(a[2])]-navigationGroupOrder[navigationGroup(b[2])]);
+  const currentNav=orderedNav.find(n=>path===n[2]||(n[2]!=="/radar360"&&path.startsWith(n[2])));
+  const currentLabel=itemId?"Detalhe institucional":sector?sector.shortName:school?school.name:currentNav?.[1]||"SuperBI 360 | GSU";
   return <div className="app-shell">
-    <aside className={`sidebar ${mobile?"open":""}`}><Logo/><button className="close-menu" onClick={()=>setMobile(false)}>×</button><span className="nav-heading">MENU PRINCIPAL</span><nav>{visibleNav.map(n=>n[2]===PAINEL_MDI_ROUTE?<div className="nav-subgroup" key={n[2]}><span>PAINÉIS ESTRATÉGICOS</span><button className={path===n[2]?"active":""} onClick={()=>go(n[2])} title="Painel Integrado de acompanhamento estratégico da URE Guarulhos Sul"><i>{n[0]}</i><span>{n[1]}</span></button></div>:<button key={n[2]} className={path===n[2]||n[2]!=="/radar360"&&path.startsWith(n[2])?"active":""} onClick={()=>go(n[2])}><i>{n[0]}</i><span>{n[1]}</span>{"SuperBI 360 | GSU"===n[1]&&<em>NOVO</em>}</button>)}</nav><div className="sidebar-foot"><span>URE GUARULHOS SUL</span><b>SuperBI 360 | GSU</b></div></aside>
-    <div className="app-main"><header className="topbar"><button className="hamburger" onClick={()=>setMobile(true)}>☰</button><div className="greeting"><span>Olá, {user.name.split(" ")[0]}</span><b>{new Intl.DateTimeFormat("pt-BR",{weekday:"long",day:"2-digit",month:"long"}).format(new Date())}</b></div>
-      <div className="top-actions">{user.role==="VISITANTE"&&<span className="demo-badge">◎ MODO VISITANTE · DADOS ILUSTRATIVOS</span>}<button className="bell">♢<i/></button>{user.role!=="VISITANTE"?<div className="user-chip"><span>{user.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span><p><b>{user.name}</b><small>{user.institutionalProfileName||user.role}</small></p></div>:<div className="user-chip"><span>VI</span><p><b>Visitante</b><small>Ambiente demonstrativo</small></p></div>}<button className="logout" onClick={onLogout}>Sair ↗</button></div></header>
+    <aside className={`sidebar ${mobile?"open":""}`} aria-label="Navegação principal"><Logo/><button className="close-menu" onClick={()=>setMobile(false)} aria-label="Fechar navegação">×</button><nav>{orderedNav.map((n,index)=>{const group=navigationGroup(n[2]);const previous=index?navigationGroup(orderedNav[index-1][2]):"";return <Fragment key={`${n[2]}-${n[1]}`}>{group!==previous&&<span className="nav-heading">{group}</span>}<button className={path===n[2]||n[2]!=="/radar360"&&path.startsWith(n[2])?"active":""} onClick={()=>go(n[2])} aria-current={path===n[2]?"page":undefined}><i aria-hidden="true">{n[0]}</i><span>{n[1]}</span></button></Fragment>})}</nav><div className="sidebar-foot"><span>URE GUARULHOS SUL</span><b>SuperBI 360 | GSU</b><small>Inteligência regional</small></div></aside>
+    <div className="app-main"><header className="topbar"><button className="hamburger" onClick={()=>setMobile(true)} aria-label="Abrir navegação">☰</button><div className="topbar-context"><span>SuperBI 360 | GSU</span><strong>{currentLabel}</strong></div><div className="topbar-date"><span>Hoje</span><strong>{new Intl.DateTimeFormat("pt-BR",{weekday:"long",day:"2-digit",month:"long"}).format(new Date())}</strong></div>
+      <div className="top-actions">{user.role==="VISITANTE"&&<span className="demo-badge">MODO VISITANTE · DADOS ILUSTRATIVOS</span>}{user.role!=="VISITANTE"?<div className="user-chip"><span>{user.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span><p><b>{user.name}</b><small>{user.institutionalProfileName||user.role}</small></p></div>:<div className="user-chip"><span>VI</span><p><b>Visitante</b><small>Ambiente demonstrativo</small></p></div>}<button className="logout" onClick={onLogout}>Sair <span aria-hidden="true">↗</span></button></div></header>
       {user.role==="VISITANTE"&&<div className="mobile-demo">Ambiente demonstrativo · nenhum dado real</div>}
-      <main className="content">{content}</main></div>{mobile&&<button className="overlay" onClick={()=>setMobile(false)} aria-label="Fechar menu"/>}
+      <main className="content"><nav className="global-breadcrumb" aria-label="Navegação estrutural"><button onClick={()=>go("/dashboard")}>SuperBI 360 | GSU</button><span aria-hidden="true">/</span><strong>{currentLabel}</strong></nav>{content}</main></div>{mobile&&<button className="overlay" onClick={()=>setMobile(false)} aria-label="Fechar menu"/>}
   </div>;
 }
 

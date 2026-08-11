@@ -137,9 +137,9 @@
 }
 
 .superbi-card:hover {
-  border-color: color-mix(in srgb, var(--sb-blue) 28%, var(--sb-border));
-  box-shadow: var(--sb-shadow-md);
-  transform: translateY(-2px);
+  border-color: var(--sb-border);
+  box-shadow: var(--sb-shadow-sm);
+  transform: none;
 }
 
 .superbi-metric-card,
