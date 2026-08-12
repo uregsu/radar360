@@ -64,6 +64,7 @@ export default function VisaoRegional360({ user, go }: { user: User; go: (path: 
   const [data, setData] = useState<RegionalData>(EMPTY_DATA);
   const [loading, setLoading] = useState(!demo);
   const [error, setError] = useState("");
+  const [experience, setExperience] = useState<Array<{reference_period:string;average_score:number;attention_score:number;attention_level:string}>>([]);
 
   useEffect(() => {
     if (demo) return;
@@ -120,6 +121,17 @@ export default function VisaoRegional360({ user, go }: { user: User; go: (path: 
     void load();
     return () => { active = false; };
   }, [demo, user.role, user.sectorId]);
+
+  useEffect(() => {
+    if (demo) return;
+    let active = true;
+    void getSupabaseBrowserClient().from("school_experience_metrics")
+      .select("reference_period,average_score,attention_score,attention_level")
+      .order("reference_period", { ascending:false }).then(({data}) => {
+        if (active) setExperience((data ?? []) as unknown as typeof experience);
+      });
+    return () => { active = false; };
+  }, [demo, user.id]);
 
   const today = new Date().toISOString().slice(0, 10);
   const summary = useMemo(() => {
@@ -212,6 +224,11 @@ export default function VisaoRegional360({ user, go }: { user: User; go: (path: 
           </div>
         </section>
       </div>
+
+      <section className="regional-section regional-experience" aria-label="Experiência Escolar">
+        <SectionHeader title="Experiência Escolar" description="Índice de Atenção à Experiência Escolar como fonte complementar do Radar de Atenção." action={!demo && experience.length ? <button className="regional-text-action" onClick={() => go("/radar360/experiencia-escolar")}>Ver análise completa</button> : undefined}/>
+        {!demo && experience.length ? (() => { const latest=experience[0].reference_period;const rows=experience.filter(item=>item.reference_period===latest);const average=rows.reduce((sum,item)=>sum+Number(item.average_score),0)/rows.length;const attention=rows.reduce((sum,item)=>sum+Number(item.attention_score),0)/rows.length;const levels=["FAVORAVEL","REGULAR","ATENCAO","ELEVADA","PRIORIDADE"];return <><div className="regional-experience-summary"><MetricCard label="Média regional" value={average.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})} detail={`Período ${latest}`} tone="teal"/><MetricCard label="Índice de Atenção" value={attention.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})} detail="Instrumento de priorização" tone="amber"/></div><div className="regional-experience-levels">{levels.map(level=><span key={level}><strong>{rows.filter(item=>item.attention_level===level).length}</strong>{level.replaceAll("_"," ").toLocaleLowerCase("pt-BR")}</span>)}</div></>})() : <EmptyState title="Experiência Escolar ainda sem edição disponível" description={demo?"Dados reais não são exibidos no ambiente demonstrativo.":"O resumo será exibido após a primeira importação institucional validada."}/>}
+      </section>
 
       <section className="regional-section" aria-label="Caminhos Estratégicos">
         <SectionHeader title="Caminhos Estratégicos" description="Aprofunde a leitura regional sem perder o contexto executivo." />

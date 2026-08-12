@@ -888,3 +888,55 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Experiência Escolar 360 */
+.experience-page { display: grid; gap: var(--sb-space-8); }
+.experience-section,.experience-import,.experience-school-section { padding: var(--sb-space-6); border: 1px solid var(--sb-border); border-radius: var(--sb-radius-lg); background: var(--sb-surface); box-shadow: var(--sb-shadow-sm); }
+.experience-kpis,.experience-school-metrics,.regional-experience-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--sb-space-4); }
+.experience-school-metrics,.regional-experience-summary { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.experience-levels,.experience-import-report { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:var(--sb-space-3); }
+.experience-levels article,.experience-import-report span { display:grid; gap:var(--sb-space-3); padding:var(--sb-space-4); border:1px solid var(--sb-border); border-radius:var(--sb-radius-md); background:var(--sb-bg); }
+.experience-levels strong,.experience-import-report strong { color:var(--sb-navy); font-size:var(--sb-text-xl); }
+.experience-regional-dimensions,.experience-signals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sb-space-4); }
+.experience-regional-dimensions article,.experience-signals article,.experience-priorities article,.experience-dimension-grid article { padding:var(--sb-space-5); border:1px solid var(--sb-border); border-radius:var(--sb-radius-md); background:var(--sb-surface); }
+.experience-regional-dimensions article { display:grid; gap:var(--sb-space-2); border-top:3px solid var(--sb-teal); }
+.experience-regional-dimensions strong { color:var(--sb-navy); font-size:1.8rem; }
+.experience-regional-dimensions small,.experience-regional-dimensions em { color:var(--sb-text-secondary); font-style:normal; }
+.experience-priorities { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sb-space-4); }
+.experience-priorities article>div { display:flex; justify-content:space-between; gap:var(--sb-space-3); }
+.experience-priorities h3,.experience-signals h3,.experience-reasons h3 { margin:0; color:var(--sb-navy); }
+.experience-priorities dl { display:grid; grid-template-columns:repeat(2,1fr); gap:var(--sb-space-3); }
+.experience-priorities dl div { display:grid; gap:var(--sb-space-1); }
+.experience-priorities dt { color:var(--sb-text-secondary); font-size:var(--sb-text-xs); }
+.experience-priorities dd { margin:0; color:var(--sb-text); font-weight:700; }
+.experience-priorities button,.experience-primary { min-height:42px; padding:0 var(--sb-space-4); border:0; border-radius:var(--sb-radius-sm); background:var(--sb-blue); color:white; cursor:pointer; }
+.experience-primary { margin-top:var(--sb-space-4); }
+.experience-primary:disabled { opacity:.55; cursor:not-allowed; }
+.experience-heatmap th:first-child { min-width:220px; text-align:left; }
+.experience-heatmap td { text-align:center; font-weight:750; border-inline:2px solid white; }
+.experience-heatmap td.is-critical { background:#f8dada; color:#812d2d; }
+.experience-heatmap td.is-elevated { background:#f8e6c7; color:#76500d; }
+.experience-heatmap td.is-watch { background:#fff4d8; color:#6c571b; }
+.experience-heatmap td.is-favorable { background:#d9f3ec; color:#12654f; }
+.experience-heatmap td.is-neutral { background:#e7f1fa; color:var(--sb-navy); }
+.experience-import-fields { display:grid; grid-template-columns:1fr 2fr 1.2fr; gap:var(--sb-space-4); }
+.experience-import-fields label,.experience-section label { display:grid; gap:var(--sb-space-2); color:var(--sb-text-secondary); font-size:var(--sb-text-sm); }
+.experience-import-fields input,.experience-section select { min-height:42px; padding:0 var(--sb-space-3); border:1px solid var(--sb-border); border-radius:var(--sb-radius-sm); background:white; color:var(--sb-text); }
+.experience-dimension-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sb-space-3); margin-top:var(--sb-space-4); }
+.experience-dimension-grid article { display:flex; align-items:center; justify-content:space-between; gap:var(--sb-space-3); }
+.experience-dimension-grid strong { color:var(--sb-navy); font-size:var(--sb-text-lg); }
+.experience-school-highlights { display:grid; grid-template-columns:1fr 1fr; gap:var(--sb-space-4); margin-top:var(--sb-space-4); }
+.experience-school-highlights span { display:grid; gap:var(--sb-space-1); padding:var(--sb-space-4); background:var(--sb-bg); border-radius:var(--sb-radius-md); }
+.experience-school-highlights small { color:var(--sb-text-secondary); }
+.experience-reasons { margin-top:var(--sb-space-5); }
+.experience-reasons ul { list-style:none; margin:var(--sb-space-3) 0 0; padding:0; display:grid; gap:var(--sb-space-2); }
+.experience-reasons li { display:flex; justify-content:space-between; padding:var(--sb-space-3); border-bottom:1px solid var(--sb-border); }
+.experience-reasons li span { display:grid; gap:var(--sb-space-1); }
+.experience-reasons small { color:var(--sb-text-secondary); }
+.regional-experience-summary { margin-bottom:var(--sb-space-4); }
+.regional-experience-levels { display:grid; grid-template-columns:repeat(5,1fr); gap:var(--sb-space-2); }
+.regional-experience-levels span { display:grid; gap:var(--sb-space-1); padding:var(--sb-space-3); border-left:3px solid var(--sb-amber); background:var(--sb-bg); color:var(--sb-text-secondary); font-size:var(--sb-text-xs); }
+.regional-experience-levels strong { color:var(--sb-navy); font-size:var(--sb-text-lg); }
+
+@media(max-width:1000px){.experience-kpis{grid-template-columns:repeat(2,1fr)}.experience-regional-dimensions,.experience-signals{grid-template-columns:repeat(2,1fr)}.experience-levels,.regional-experience-levels{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.experience-kpis,.experience-school-metrics,.regional-experience-summary,.experience-regional-dimensions,.experience-signals,.experience-priorities,.experience-dimension-grid,.experience-school-highlights,.experience-import-fields{grid-template-columns:1fr}.experience-levels,.regional-experience-levels{grid-template-columns:repeat(2,1fr)}.experience-section,.experience-import,.experience-school-section{padding:var(--sb-space-4)}}

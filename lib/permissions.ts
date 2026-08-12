@@ -3,6 +3,7 @@ import type { Role, User } from "../types";
 export type ResourceAction = "read" | "create" | "update" | "delete" | "manage";
 
 export const routeAccess: Record<string, Role[]> = {
+  "/radar360/experiencia-escolar": ["ADMIN", "GESTAO", "ESCOLA"],
   "/evidencias/paineis-estrategicos/painel-mdi": ["ADMIN", "GESTAO"],
   "/radar360/dirigente": ["ADMIN"],
   "/radar360/gestao": ["ADMIN", "GESTAO", "VISITANTE"],
