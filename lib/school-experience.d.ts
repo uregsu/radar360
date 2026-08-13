@@ -7,5 +7,6 @@ export function normalizeSchoolName(value:unknown):string;
 export function validateDimensionValues(values:DimensionValues):string[];
 export function baseAttentionLevel(score:number):{min:number;max:number;value:string;label:string;rank:number};
 export function calculateSchoolExperience(values:DimensionValues):any;
+export function toSchoolExperienceInsert(row:Record<string,unknown>,importedBy:string):Record<string,unknown>;
 export function parseExperienceCsv(text:string):Array<{row:number;schoolName:string;values:DimensionValues}>;
 export function prepareExperienceImport(rows:any[],schools:any[],options:{referencePeriod:string;source:string}):{received:number;matched:number;notFound:number;duplicates:number;invalid:number;pending:any[];accepted:any[]};

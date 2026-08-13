@@ -19,3 +19,7 @@ test("calcula somente leituras suportadas pelos valores recebidos",()=>{
 test("formata unidade original e preserva ausência",()=>{
   assert.equal(formatQualityValue(row("a","2026",78.25)),"78,3%");assert.equal(formatQualityValue(null),"—");
 });
+
+test("regional_value nulo não cria comparação regional com zero",()=>{
+  const view=projectSchoolQuality([row("a","2026",78,{regional_value:null})]);assert.equal(view.comparable.length,0);assert.equal(view.aboveRegional.length,0);
+});

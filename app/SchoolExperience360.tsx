@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import type { User } from "../types";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
-import { ATTENTION_LEVELS, EXPERIENCE_DIMENSIONS, parseExperienceCsv, prepareExperienceImport } from "../lib/school-experience.mjs";
+import { ATTENTION_LEVELS, EXPERIENCE_DIMENSIONS, parseExperienceCsv, prepareExperienceImport, toSchoolExperienceInsert } from "../lib/school-experience.mjs";
 import { AlertBanner, DataTable, EmptyState, FilterBar, LoadingState, MetricCard, PageHeader, SearchInput, SectionHeader, StatusBadge } from "./SuperBIUI";
 
 export type ExperienceMetric = {
@@ -36,7 +36,7 @@ function ImportPanel({ onImported }:{onImported:()=>Promise<void>}) {
   const importRows=async()=>{
     if(!report?.accepted.length)return;setSaving(true);setMessage("");const supabase=getSupabaseBrowserClient();const {data:{user}}=await supabase.auth.getUser();
     if(!user){setMessage("Sessão administrativa indisponível.");setSaving(false);return}
-    const payload=report.accepted.map((row:any)=>({...row,imported_by:user.id}));
+    const payload=report.accepted.map((row:any)=>toSchoolExperienceInsert(row,user.id));
     const {error}=await supabase.from("school_experience_metrics").insert(payload);
     if(error)setMessage("Importação recusada. Confirme migration, RLS e se a mesma escola, período e fonte já foram importados.");else{setMessage(`${payload.length} registros importados com associação institucional.`);await onImported()};setSaving(false);
   };

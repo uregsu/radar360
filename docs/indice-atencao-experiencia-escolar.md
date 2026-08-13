@@ -23,6 +23,10 @@ Faixas: 0–19,9 Situação favorável; 20–34,9 Acompanhamento regular; 35–4
 
 O índice matemático, a classificação base e a prioridade resultante são armazenados separadamente. Os motivos de atenção registram dimensões e valores sem alterar os dados originais.
 
+O banco recalcula os campos derivados em trigger antes de cada INSERT ou UPDATE e rejeita divergências fornecidas pelo cliente. A autoria original permanece em `imported_by`; atualizações posteriores registram o administrador em `updated_by`.
+
 ## Governança e limitações
 
 ADMIN importa e visualiza; GESTAO visualiza conforme o escopo institucional; ESCOLA visualiza somente a própria escola; VISITANTE não acessa dados reais. Uma única edição não produz tendência. Comparações históricas são descritivas, não causais.
+
+Exclusão pela aplicação não é concedida a nenhum perfil. O período aceita `AAAA` ou `AAAA-1` a `AAAA-4`, conforme as edições previstas para esta pesquisa.

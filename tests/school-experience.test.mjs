@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { calculateSchoolExperience, normalizeSchoolName, parseExperienceCsv, prepareExperienceImport } from "../lib/school-experience.mjs";
+import { calculateSchoolExperience, normalizeSchoolName, parseExperienceCsv, prepareExperienceImport, toSchoolExperienceInsert } from "../lib/school-experience.mjs";
 
 const values = (value) => ({ class_quality:value, school_climate:value, spaces_and_bathrooms:value, learning_support:value, engagement_life_project:value, overall_satisfaction:value });
 
@@ -67,4 +67,9 @@ test("parser CSV associa dimensões pelo cabeçalho mesmo fora da ordem", () => 
 
 test("relatório separa não encontrados, duplicidades e inválidos", () => {
   const school={id:"1",name:"ESCOLA A",organization_id:"o"};const report=prepareExperienceImport([{row:2,schoolName:"DESCONHECIDA",values:values(7)},{row:3,schoolName:"ESCOLA A",values:values(7)},{row:4,schoolName:"ESCOLA A",values:{...values(7),class_quality:12}}],[school],{referencePeriod:"2026-1",source:"Pesquisa"});assert.equal(report.notFound,1);assert.equal(report.duplicates,1);assert.equal(report.invalid,1);assert.equal(report.matched,1);
+});
+
+test("payload de INSERT delega campos derivados ao banco", () => {
+  const prepared={school_id:"s",organization_id:"o",reference_period:"2026",source:"Pesquisa",class_quality:7,average_score:7,attention_score:30,critical_dimension:"class_quality",below_3_count:0};
+  const payload=toSchoolExperienceInsert(prepared,"admin");assert.equal(payload.class_quality,7);assert.equal(payload.imported_by,"admin");assert.equal("average_score" in payload,false);assert.equal("attention_score" in payload,false);assert.equal("critical_dimension" in payload,false);assert.equal("below_3_count" in payload,false);
 });
