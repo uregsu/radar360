@@ -940,3 +940,35 @@
 
 @media(max-width:1000px){.experience-kpis{grid-template-columns:repeat(2,1fr)}.experience-regional-dimensions,.experience-signals{grid-template-columns:repeat(2,1fr)}.experience-levels,.regional-experience-levels{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:700px){.experience-kpis,.experience-school-metrics,.regional-experience-summary,.experience-regional-dimensions,.experience-signals,.experience-priorities,.experience-dimension-grid,.experience-school-highlights,.experience-import-fields{grid-template-columns:1fr}.experience-levels,.regional-experience-levels{grid-template-columns:repeat(2,1fr)}.experience-section,.experience-import,.experience-school-section{padding:var(--sb-space-4)}}
+
+/* Escola 360 · Qualidade da Aula (Escola Total) */
+.school-tabs { overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; }
+.school-tabs button { flex:0 0 auto; white-space:nowrap; }
+.school-360-layers { display:grid; gap:var(--sb-space-6); margin-top:var(--sb-space-6); }
+.school-360-layer,.school-quality-overview>section { padding:var(--sb-space-6); border:1px solid var(--sb-border); border-radius:var(--sb-radius-lg); background:var(--sb-surface); box-shadow:var(--sb-shadow-sm); }
+.quality-link { min-height:40px; padding:0 var(--sb-space-4); border:1px solid var(--sb-blue); border-radius:var(--sb-radius-sm); background:white; color:var(--sb-blue); font-weight:700; cursor:pointer; }
+.quality-summary-cards,.quality-overview-cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--sb-space-4); }
+.quality-mini-bars { display:grid; gap:var(--sb-space-3); margin-top:var(--sb-space-5); }
+.quality-mini-bars>div { display:grid; grid-template-columns:minmax(150px,1fr) minmax(120px,2fr) auto; align-items:center; gap:var(--sb-space-3); }
+.quality-mini-bars progress { width:100%; height:10px; accent-color:var(--sb-teal); }
+.school-quality-overview { display:grid; gap:var(--sb-space-6); }
+.school-quality-overview>header { display:flex; justify-content:space-between; gap:var(--sb-space-6); padding:var(--sb-space-6); border-radius:var(--sb-radius-lg); background:linear-gradient(135deg,var(--sb-navy),var(--sb-blue)); color:white; }
+.school-quality-overview>header h2 { margin:0 0 var(--sb-space-2); font-size:var(--sb-text-2xl); }
+.school-quality-overview>header p { margin:0 0 var(--sb-space-3); color:rgba(255,255,255,.82); }
+.school-quality-overview>header small { color:rgba(255,255,255,.72); }
+.quality-period { display:grid; align-content:start; gap:var(--sb-space-2); min-width:220px; }
+.quality-period label { display:grid; gap:var(--sb-space-2); font-size:var(--sb-text-sm); }
+.quality-period select { min-height:42px; padding:0 var(--sb-space-3); border:1px solid rgba(255,255,255,.35); border-radius:var(--sb-radius-sm); background:white; color:var(--sb-navy); }
+.quality-period span { font-size:var(--sb-text-xs); color:rgba(255,255,255,.75); }
+.quality-source { margin:var(--sb-space-2) 0 var(--sb-space-5); color:var(--sb-text-secondary); font-size:var(--sb-text-sm); }
+.quality-dimensions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sb-space-4); }
+.quality-dimensions article { display:grid; gap:var(--sb-space-3); padding:var(--sb-space-5); border:1px solid var(--sb-border); border-top:3px solid var(--sb-teal); border-radius:var(--sb-radius-md); background:var(--sb-bg); }
+.quality-dimensions article>div { display:flex; justify-content:space-between; gap:var(--sb-space-2); }
+.quality-dimensions h3 { margin:0; color:var(--sb-navy); font-size:var(--sb-text-base); }
+.quality-dimensions strong { color:var(--sb-blue); font-size:var(--sb-text-2xl); }
+.quality-dimensions small { color:var(--sb-text-secondary); }
+.quality-insights,.quality-attention { display:grid; gap:var(--sb-space-3); margin:0; padding-left:var(--sb-space-5); color:var(--sb-text); }
+.quality-attention { list-style:none; padding:0; }
+.quality-attention li { display:flex; justify-content:space-between; gap:var(--sb-space-4); padding:var(--sb-space-3); border-bottom:1px solid var(--sb-border); }
+@media(max-width:1000px){.quality-summary-cards,.quality-overview-cards{grid-template-columns:repeat(2,1fr)}.quality-dimensions{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.school-360-layer,.school-quality-overview>section{padding:var(--sb-space-4)}.school-quality-overview>header{display:grid;padding:var(--sb-space-5)}.quality-period{min-width:0}.quality-summary-cards,.quality-overview-cards,.quality-dimensions{grid-template-columns:1fr}.quality-mini-bars>div{grid-template-columns:1fr auto}.quality-mini-bars progress{grid-column:1/-1}.quality-attention li{display:grid}}
