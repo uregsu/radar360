@@ -25,6 +25,10 @@ O índice matemático, a classificação base e a prioridade resultante são arm
 
 O banco recalcula os campos derivados em trigger antes de cada INSERT ou UPDATE e rejeita divergências fornecidas pelo cliente. A autoria original permanece em `imported_by`; atualizações posteriores registram o administrador em `updated_by`.
 
+## Correção histórica de tipagem
+
+O teste transacional remoto posterior à migration `20260812000100` revelou `SQLSTATE 42804`: o `CASE` da prioridade resultante combinava literais textuais com o enum `school_experience_attention_level`. A migration aditiva `20260813000200_fix_school_experience_attention_enum.sql` substitui somente a função do trigger e aplica casts explícitos nos literais desse `CASE`, preservando fórmulas, faixas, gatilhos, desempates, proveniência e mensagens Unicode. Ela deve ser aplicada antes de qualquer carga de dados; as migrations já registradas não são reescritas.
+
 ## Governança e limitações
 
 ADMIN importa e visualiza; GESTAO visualiza conforme o escopo institucional; ESCOLA visualiza somente a própria escola; VISITANTE não acessa dados reais. Uma única edição não produz tendência. Comparações históricas são descritivas, não causais.

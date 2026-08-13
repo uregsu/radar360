@@ -16,6 +16,12 @@ test("classifica todas as faixas base", () => {
   assert.equal(calculateSchoolExperience(values(8.01)).baseLevel,"FAVORAVEL");assert.equal(calculateSchoolExperience(values(7)).baseLevel,"REGULAR");assert.equal(calculateSchoolExperience(values(6)).baseLevel,"ATENCAO");assert.equal(calculateSchoolExperience(values(4)).baseLevel,"ELEVADA");assert.equal(calculateSchoolExperience(values(3)).baseLevel,"PRIORIDADE");
 });
 
+test("classifica exatamente as fronteiras oficiais do índice", () => {
+  for(const [attention,expected] of [[19.9,"FAVORAVEL"],[20,"REGULAR"],[34.9,"REGULAR"],[35,"ATENCAO"],[49.9,"ATENCAO"],[50,"ELEVADA"],[64.9,"ELEVADA"],[65,"PRIORIDADE"]]){
+    assert.equal(calculateSchoolExperience(values(10-attention/10)).baseLevel,expected,`índice ${attention}`);
+  }
+});
+
 test("gatilho abaixo de 3 cria prioridade explicável", () => {
   const result=calculateSchoolExperience({...values(8),spaces_and_bathrooms:2.9});assert.equal(result.hasCriticalTrigger,true);assert.equal(result.attentionLevel,"PRIORIDADE");assert.equal(result.reasons[0].severity,"CRITICO");
 });
@@ -54,7 +60,9 @@ test("múltiplos períodos permanecem identificáveis", () => {
 
 test("casos representativos preservam valores e gatilhos", () => {
   const joao=calculateSchoolExperience({class_quality:8.294117647,school_climate:5.369281046,spaces_and_bathrooms:2.411764706,learning_support:6.323529412,engagement_life_project:6.745098039,overall_satisfaction:3.5625});assert.equal(joao.hasCriticalTrigger,true);assert.equal(joao.criticalDimension,"spaces_and_bathrooms");
+  const rafael=calculateSchoolExperience({...values(7),overall_satisfaction:1.830188679});assert.equal(rafael.hasCriticalTrigger,true);assert.equal(rafael.criticalDimension,"overall_satisfaction");assert.equal(rafael.attentionLevel,"PRIORIDADE");
   const fusco=calculateSchoolExperience({class_quality:4.703333333,school_climate:3.916666667,spaces_and_bathrooms:2.636666667,learning_support:2.79,engagement_life_project:4.31,overall_satisfaction:4.808510638});assert.equal(fusco.attentionLevel,"PRIORIDADE");assert.ok(fusco.triggerCount>=5);
+  const favoravel=calculateSchoolExperience(values(8.5));assert.equal(favoravel.baseLevel,"FAVORAVEL");assert.equal(favoravel.attentionLevel,"FAVORAVEL");
 });
 
 test("parser CSV preserva seis números originais", () => {
