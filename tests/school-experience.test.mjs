@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { calculateSchoolExperience, normalizeSchoolName, parseExperienceCsv, prepareExperienceImport, toSchoolExperienceInsert } from "../lib/school-experience.mjs";
+import { calculateSchoolExperience, experienceHeatmapTooltip, normalizeSchoolName, parseExperienceCsv, prepareExperienceImport, projectExperiencePriorities, toSchoolExperienceInsert } from "../lib/school-experience.mjs";
 
 const values = (value) => ({ class_quality:value, school_climate:value, spaces_and_bathrooms:value, learning_support:value, engagement_life_project:value, overall_satisfaction:value });
 
@@ -80,4 +80,31 @@ test("relatório separa não encontrados, duplicidades e inválidos", () => {
 test("payload de INSERT delega campos derivados ao banco", () => {
   const prepared={school_id:"s",organization_id:"o",reference_period:"2026",source:"Pesquisa",class_quality:7,average_score:7,attention_score:30,critical_dimension:"class_quality",below_3_count:0};
   const payload=toSchoolExperienceInsert(prepared,"admin");assert.equal(payload.class_quality,7);assert.equal(payload.imported_by,"admin");assert.equal("average_score" in payload,false);assert.equal("attention_score" in payload,false);assert.equal("critical_dimension" in payload,false);assert.equal("below_3_count" in payload,false);
+});
+
+test("prioridades possuem projeção própria, independente da ordem e dos filtros do heatmap", () => {
+  const metric=(id,overrides={})=>({id,reference_period:"2026",attention_level:"ATENCAO",attention_score:40,average_score:6,critical_dimension_score:5,trigger_count:1,below_3_count:0,below_4_count:0,below_5_count:0,below_6_count:1,schools:{name:id},...overrides});
+  const metrics=[metric("regular",{attention_level:"REGULAR",attention_score:30}),metric("priority-b",{attention_level:"PRIORIDADE",attention_score:55,below_6_count:3}),metric("priority-a",{attention_level:"PRIORIDADE",attention_score:45,below_3_count:1}),metric("other-period",{reference_period:"2025",attention_level:"PRIORIDADE"})];
+  const expected=["priority-a","priority-b","regular"];
+  assert.deepEqual(projectExperiencePriorities(metrics,"2026").map(row=>row.id),expected);
+  assert.deepEqual(projectExperiencePriorities([...metrics].reverse(),"2026").map(row=>row.id),expected);
+  const visuallyFiltered=metrics.filter(row=>row.attention_level==="REGULAR");
+  assert.deepEqual(projectExperiencePriorities(metrics,"2026").map(row=>row.id),expected);
+  assert.deepEqual(visuallyFiltered.map(row=>row.id),["regular"]);
+});
+
+test("casos de controle preservam resultados oficiais", () => {
+  const cases=[
+    ["JOAO DE ALMEIDA BARBOSA",{class_quality:8.294117647,school_climate:5.369281046,spaces_and_bathrooms:2.411764706,learning_support:6.323529412,engagement_life_project:6.745098039,overall_satisfaction:3.5625},5.4511,45.489,"ATENCAO","PRIORIDADE"],
+    ["SEBASTIAO WALTER FUSCO",{class_quality:4.703333333,school_climate:3.916666667,spaces_and_bathrooms:2.636666667,learning_support:2.79,engagement_life_project:4.31,overall_satisfaction:4.808510638},3.8609,61.391,"ELEVADA","PRIORIDADE"],
+    ["JOAO CRISPINIANO SOARES",values(8.5),8.5,15,"FAVORAVEL","FAVORAVEL"],
+    ["VICTOR CIVITA",values(8.5),8.5,15,"FAVORAVEL","FAVORAVEL"],
+  ];
+  for(const [name,input,average,attention,base,resulting] of cases){const result=calculateSchoolExperience(input);assert.ok(Math.abs(result.averageScore-average)<0.001,`${name}: média`);assert.ok(Math.abs(result.attentionScore-attention)<0.001,`${name}: índice`);assert.equal(result.baseLevel,base);assert.equal(result.attentionLevel,resulting)}
+  const rafael=calculateSchoolExperience({...values(7),overall_satisfaction:1.830188679});assert.ok(Math.abs(rafael.criticalDimensionScore-1.8302)<0.001);assert.equal(rafael.attentionLevel,"PRIORIDADE");
+});
+
+test("tooltip recebe escola, dimensão, valor e classificação contextuais", () => {
+  assert.deepEqual(experienceHeatmapTooltip("RAFAEL RODRIGUES FILHO PREFEITO","Satisfação Geral",1.8302),{school:"RAFAEL RODRIGUES FILHO PREFEITO",dimension:"Satisfação Geral",value:1.8302,classification:"Crítica"});
+  assert.equal(experienceHeatmapTooltip("ESCOLA","Clima Escolar",5.5).classification,"Acompanhamento");assert.equal(experienceHeatmapTooltip("ESCOLA","Qualidade da Aula",8).classification,"Favorável");
 });

@@ -914,6 +914,11 @@
 .experience-primary:disabled { opacity:.55; cursor:not-allowed; }
 .experience-heatmap th:first-child { min-width:220px; text-align:left; }
 .experience-heatmap td { text-align:center; font-weight:750; border-inline:2px solid white; }
+.experience-heatmap-cell { position:relative; width:100%; min-width:52px; min-height:38px; padding:var(--sb-space-2); border:0; background:transparent; color:inherit; font:inherit; cursor:help; }
+.experience-heatmap-cell:focus-visible { outline:3px solid var(--sb-blue); outline-offset:-3px; border-radius:var(--sb-radius-sm); }
+.experience-heatmap-tooltip { position:absolute; z-index:20; left:50%; bottom:calc(100% + var(--sb-space-2)); display:none; width:max-content; max-width:min(280px,70vw); padding:var(--sb-space-3); transform:translateX(-50%); border:1px solid var(--sb-border); border-radius:var(--sb-radius-sm); background:var(--sb-navy); box-shadow:var(--sb-shadow-md); color:white; text-align:left; white-space:normal; overflow-wrap:anywhere; font-size:var(--sb-text-xs); font-weight:500; }
+.experience-heatmap-tooltip strong,.experience-heatmap-tooltip span { display:block; }
+.experience-heatmap-cell:hover .experience-heatmap-tooltip,.experience-heatmap-cell:focus-visible .experience-heatmap-tooltip { display:block; }
 .experience-heatmap td.is-critical { background:#f8dada; color:#812d2d; }
 .experience-heatmap td.is-elevated { background:#f8e6c7; color:#76500d; }
 .experience-heatmap td.is-watch { background:#fff4d8; color:#6c571b; }
