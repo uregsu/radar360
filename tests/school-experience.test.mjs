@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { calculateSchoolExperience, experienceHeatmapTooltip, normalizeSchoolName, parseExperienceCsv, prepareExperienceImport, projectExperiencePriorities, toSchoolExperienceInsert } from "../lib/school-experience.mjs";
+import { calculateSchoolExperience, countExperienceLevels, experienceHeatmapTooltip, filterExperienceMetrics, normalizeSchoolName, parseExperienceCsv, prepareExperienceImport, projectExperiencePriorities, toSchoolExperienceInsert, toggleExperienceLevel } from "../lib/school-experience.mjs";
 
 const values = (value) => ({ class_quality:value, school_climate:value, spaces_and_bathrooms:value, learning_support:value, engagement_life_project:value, overall_satisfaction:value });
 
@@ -91,6 +91,37 @@ test("prioridades possuem projeção própria, independente da ordem e dos filtr
   const visuallyFiltered=metrics.filter(row=>row.attention_level==="REGULAR");
   assert.deepEqual(projectExperiencePriorities(metrics,"2026").map(row=>row.id),expected);
   assert.deepEqual(visuallyFiltered.map(row=>row.id),["regular"]);
+});
+
+test("card de nível aplica e remove o mesmo estado usado pelo dropdown", () => {
+  let level="";
+  level=toggleExperienceLevel(level,"ELEVADA");assert.equal(level,"ELEVADA");
+  level=toggleExperienceLevel(level,"ELEVADA");assert.equal(level,"");
+});
+
+test("dropdown e cards permanecem sincronizados ao trocar de nível", () => {
+  let level="REGULAR";
+  assert.equal(level,"REGULAR");
+  level=toggleExperienceLevel(level,"PRIORIDADE");
+  assert.equal(level,"PRIORIDADE");
+});
+
+test("filtro de nível combina com os demais filtros", () => {
+  const rows=[
+    {id:"elevada-a",reference_period:"2026",attention_level:"ELEVADA",critical_dimension:"school_climate",trigger_count:2,average_score:4.5,schools:{name:"ESCOLA ALFA"}},
+    {id:"elevada-b",reference_period:"2026",attention_level:"ELEVADA",critical_dimension:"class_quality",trigger_count:0,average_score:5.2,schools:{name:"ESCOLA BETA"}},
+    {id:"regular",reference_period:"2026",attention_level:"REGULAR",critical_dimension:"school_climate",trigger_count:2,average_score:7,schools:{name:"ESCOLA ALFA"}},
+  ];
+  assert.deepEqual(filterExperienceMetrics(rows,{referencePeriod:"2026",level:"ELEVADA"}).map(row=>row.id),["elevada-a","elevada-b"]);
+  assert.deepEqual(filterExperienceMetrics(rows,{referencePeriod:"2026",level:"ELEVADA",query:"alfa",dimension:"school_climate",trigger:"yes",averageMax:"5"}).map(row=>row.id),["elevada-a"]);
+});
+
+test("distribuição completa permanece independente do filtro de nível", () => {
+  const expected={FAVORAVEL:18,REGULAR:28,ATENCAO:9,ELEVADA:14,PRIORIDADE:13};
+  const rows=Object.entries(expected).flatMap(([attention_level,total])=>Array.from({length:total},(_,index)=>({id:`${attention_level}-${index}`,reference_period:"2026",attention_level})));
+  assert.deepEqual(countExperienceLevels(rows,"2026"),expected);
+  assert.equal(filterExperienceMetrics(rows,{referencePeriod:"2026",level:"ELEVADA"}).length,14);
+  assert.deepEqual(countExperienceLevels(rows,"2026"),expected);
 });
 
 test("casos de controle preservam resultados oficiais", () => {

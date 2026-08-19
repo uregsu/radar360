@@ -895,7 +895,11 @@
 .experience-kpis,.experience-school-metrics,.regional-experience-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--sb-space-4); }
 .experience-school-metrics,.regional-experience-summary { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .experience-levels,.experience-import-report { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:var(--sb-space-3); }
-.experience-levels article,.experience-import-report span { display:grid; gap:var(--sb-space-3); padding:var(--sb-space-4); border:1px solid var(--sb-border); border-radius:var(--sb-radius-md); background:var(--sb-bg); }
+.experience-levels button,.experience-import-report span { display:grid; gap:var(--sb-space-3); padding:var(--sb-space-4); border:1px solid var(--sb-border); border-radius:var(--sb-radius-md); background:var(--sb-bg); color:inherit; font:inherit; text-align:left; }
+.experience-levels button { width:100%; cursor:pointer; transition:border-color var(--sb-transition),box-shadow var(--sb-transition),background-color var(--sb-transition),transform var(--sb-transition); }
+.experience-levels button:hover { border-color:color-mix(in srgb,var(--sb-blue) 38%,var(--sb-border)); transform:translateY(-1px); }
+.experience-levels button.is-active { border-color:var(--sb-blue); background:color-mix(in srgb,var(--sb-blue) 8%,var(--sb-surface)); box-shadow:0 0 0 2px color-mix(in srgb,var(--sb-blue) 16%,transparent); }
+.experience-levels button:focus-visible { outline:3px solid color-mix(in srgb,var(--sb-cyan) 45%,transparent); outline-offset:2px; }
 .experience-levels strong,.experience-import-report strong { color:var(--sb-navy); font-size:var(--sb-text-xl); }
 .experience-regional-dimensions,.experience-signals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sb-space-4); }
 .experience-regional-dimensions article,.experience-signals article,.experience-priorities article,.experience-dimension-grid article { padding:var(--sb-space-5); border:1px solid var(--sb-border); border-radius:var(--sb-radius-md); background:var(--sb-surface); }
