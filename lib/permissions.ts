@@ -1,8 +1,11 @@
 import type { Role, User } from "../types";
+import { ASURE_OUVIDORIAS_ROUTE } from "../config/ouvidorias";
 
 export type ResourceAction = "read" | "create" | "update" | "delete" | "manage";
 
 export const routeAccess: Record<string, Role[]> = {
+  [ASURE_OUVIDORIAS_ROUTE]: ["ADMIN", "GESTAO"],
+  "/radar360/experiencia-escolar": ["ADMIN", "GESTAO", "ESCOLA"],
   "/evidencias/paineis-estrategicos/painel-mdi": ["ADMIN", "GESTAO"],
   "/radar360/dirigente": ["ADMIN"],
   "/radar360/gestao": ["ADMIN", "GESTAO", "VISITANTE"],
@@ -13,6 +16,10 @@ export const routeAccess: Record<string, Role[]> = {
   "/radar360/integracao": ["ADMIN", "GESTAO"],
   "/radar360/usuarios": ["ADMIN"],
 };
+
+export function canAccessAsureOuvidorias(role: Role) {
+  return routeAccess[ASURE_OUVIDORIAS_ROUTE].includes(role);
+}
 
 export function canAccess(role: Role, path: string) {
   const match = Object.entries(routeAccess).find(([route]) => path.startsWith(route));
