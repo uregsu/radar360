@@ -153,3 +153,21 @@
 .sidebar>.superbi-brand{padding:0 10px 24px;border-bottom:1px solid #ffffff14;margin-bottom:14px}.sidebar>.superbi-brand .superbi-brand-copy{overflow:hidden}.sidebar>.superbi-brand .superbi-brand-copy strong{font-size:14px}.module-hero>.superbi-brand{margin-bottom:4px}.about-intro-brand,.ecosystem-product-brand{position:relative;z-index:1;justify-self:center}.about-intro-brand .superbi-brand-symbol,.ecosystem-product-brand .superbi-brand-symbol{filter:drop-shadow(0 16px 22px #0c2d5724)}
 @media(max-width:768px){.ecosystem-product-brand{justify-self:start}.login-story>.superbi-brand .superbi-brand-copy small{max-width:260px}}
 @media(max-width:640px){.login-story>.superbi-brand .superbi-brand-copy small{display:none}}
+
+/* One scroll region for the sidebar, including the sector shortcuts. */
+.sidebar{height:100dvh;max-height:100dvh;overflow:hidden}
+.sidebar nav{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#52708c transparent;overscroll-behavior:contain;padding:3px}
+.sidebar nav>button,.sidebar nav>.nav-heading,.sidebar nav>.sector-navigation{flex-shrink:0}
+.sidebar-foot,.sidebar>.superbi-brand{flex-shrink:0}
+.sector-navigation{min-width:0;margin:5px 0 10px}
+.sidebar nav .sector-navigation-toggle{width:100%;min-height:44px;height:auto;padding:10px 12px;font-size:9px;font-weight:700;letter-spacing:1px;color:#c2d5e9}
+.sidebar nav .sector-navigation-toggle i{flex:none;color:inherit}
+.sector-navigation-list{list-style:none;margin:0 0 0 13px;padding:0 0 0 7px;border-left:1px solid #52708c}
+.sector-navigation-list[hidden]{display:none}
+.sector-navigation-list li{margin:2px 0}
+.sector-navigation-list a{display:flex;align-items:center;gap:10px;min-height:44px;border-radius:8px;padding:9px 12px;color:#adc3dc;text-decoration:none;font-size:11px}
+.sector-navigation-list a i{font-style:normal;font-size:9px;color:#82a6c7;min-width:20px}
+.sector-navigation-list a:hover,.sector-navigation-list a.active{background:#174668;color:#fff}
+.sector-navigation-list a.active{box-shadow:inset 3px 0 #3ed6d1;font-weight:700}
+.sidebar nav button:focus-visible,.sector-navigation-list a:focus-visible,.hamburger:focus-visible,.close-menu:focus-visible{outline:2px solid #3ed6d1;outline-offset:2px}
+@media(max-width:1050px){.sidebar:not(.open){visibility:hidden;pointer-events:none}.sidebar.open{visibility:visible}.sector-navigation-list a{min-height:44px}.close-menu{min-width:44px;min-height:44px}}

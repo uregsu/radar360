@@ -1,5 +1,6 @@
 import type { Role, User } from "../types";
 import { ASURE_OUVIDORIAS_ROUTE } from "../config/ouvidorias";
+import { canAccessSector, getSectorByRoute, isSectorPath, SECTOR_INDEX_ROUTE } from "./sector-navigation";
 
 export type ResourceAction = "read" | "create" | "update" | "delete" | "manage";
 
@@ -24,6 +25,16 @@ export function canAccessAsureOuvidorias(role: Role) {
 export function canAccess(role: Role, path: string) {
   const match = Object.entries(routeAccess).find(([route]) => path.startsWith(route));
   return !match || match[1].includes(role);
+}
+
+/** Navigation guard shared by clicks, direct URLs and history navigation.
+ * Ouvidorias retains its existing independent role policy, without changes. */
+export function canAccessNavigation(user: User, path: string, linkedSectorKey?: string) {
+  if (path === ASURE_OUVIDORIAS_ROUTE) return canAccess(user.role, path);
+  if (!isSectorPath(path)) return canAccess(user.role, path);
+  if (path.replace(/\/+$/, "") === SECTOR_INDEX_ROUTE) return user.status === "ativo" && user.role !== "ESCOLA";
+  const sector = getSectorByRoute(path);
+  return Boolean(sector && canAccessSector(user, sector, linkedSectorKey));
 }
 
 export function canManageUsers(user: User) {
