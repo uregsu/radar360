@@ -9,8 +9,10 @@ export interface School {
   id: string; name: string; slug: string; pei: boolean; status: "ativa";
 }
 export interface Sector {
+  key: string; label: string; route: string; enabled: boolean;
+  permissions: { roles: Role[]; public: boolean };
   id: string; slug: string; name: string; shortName: string; group: string; description: string;
-  icon: string; status: IntegrationStatus; integrationType: string; hubUrl?: string; visibility: Role[]; menu: string[];
+  icon: string; status: IntegrationStatus; integrationType: string; hubUrl?: string; menu: string[];
 }
 export interface InstitutionalDemand {
   id: string; title: string; description: string; sectorId: string; subsectorId: string; schoolId?: string;

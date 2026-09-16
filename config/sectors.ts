@@ -1,10 +1,13 @@
 import type { Sector } from "../types";
 
-const access = ["ADMIN", "GESTAO", "VISITANTE"] as const;
+// Internal by default. Public/school access requires an explicit decision here.
+const access = ["ADMIN", "GESTAO"] as const;
 const make = (shortName: string, name: string, description: string, menu: string[], status: Sector["status"] = "Em implantação", hubUrl?: string): Sector => ({
+  key: shortName.toLowerCase(), label: shortName, route: `/radar360/setores/${shortName.toLowerCase()}`,
+  enabled: true, permissions: { roles: [...access], public: false },
   id: shortName.toLowerCase(), slug: shortName.toLowerCase(), name, shortName, group: "URE Guarulhos Sul",
   description, icon: shortName.slice(0, 2), status, integrationType: hubUrl ? "Link externo" : status === "Integrado" ? "Dashboard" : "Planejada",
-  hubUrl, visibility: [...access], menu,
+  hubUrl, menu,
 });
 const common = ["Visão Geral", "Demandas", "Acompanhamento", "Documentos", "Histórico", "Fontes de Dados", "Evidências"];
 
