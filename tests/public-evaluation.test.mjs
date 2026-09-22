@@ -31,3 +31,13 @@ test("Forms usam URLs completas incorporáveis e oferecem fallback externo", () 
   assert.match(embed, /Abrir formulário em nova aba/);
   assert.match(embed, /title=\{title\}/);
 });
+
+test("cada fluxo usa exclusivamente o Google Form correspondente", () => {
+  const data = read("app/avaliacao/evaluation-data.ts");
+  const schoolsFlow = data.match(/slug: "escolas-avaliam-setores"[\s\S]*?icon: "school"/)?.[0] ?? "";
+  const sectorsFlow = data.match(/slug: "setores-avaliam-escolas"[\s\S]*?icon: "sectors"/)?.[0] ?? "";
+  assert.match(schoolsFlow, /1FAIpQLSeCv_MP9l2eM5aE0lN2qOwrn5szus2ySn6H8oli3NmkCo5TiQ/);
+  assert.doesNotMatch(schoolsFlow, /1FAIpQLScv4pA4-0lJm5a-UJ2BLZLy4JTVc-gT83zrUBwqmqpWZOUIoQ/);
+  assert.match(sectorsFlow, /1FAIpQLScv4pA4-0lJm5a-UJ2BLZLy4JTVc-gT83zrUBwqmqpWZOUIoQ/);
+  assert.doesNotMatch(sectorsFlow, /1FAIpQLSeCv_MP9l2eM5aE0lN2qOwrn5szus2ySn6H8oli3NmkCo5TiQ/);
+});

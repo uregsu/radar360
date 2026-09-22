@@ -18,9 +18,9 @@ export const evaluationFlows: EvaluationFlow[] = [
     description:
       "Utilize esta opção se você representa uma escola da URE Guarulhos Sul e deseja avaliar os serviços e atendimentos realizados pelos setores da Unidade Regional de Ensino.",
     formUrl:
-      "https://docs.google.com/forms/d/e/1FAIpQLScv4pA4-0lJm5a-UJ2BLZLy4JTVc-gT83zrUBwqmqpWZOUIoQ/viewform",
+      "https://docs.google.com/forms/d/e/1FAIpQLSeCv_MP9l2eM5aE0lN2qOwrn5szus2ySn6H8oli3NmkCo5TiQ/viewform",
     embedUrl:
-      "https://docs.google.com/forms/d/e/1FAIpQLScv4pA4-0lJm5a-UJ2BLZLy4JTVc-gT83zrUBwqmqpWZOUIoQ/viewform?embedded=true",
+      "https://docs.google.com/forms/d/e/1FAIpQLSeCv_MP9l2eM5aE0lN2qOwrn5szus2ySn6H8oli3NmkCo5TiQ/viewform?embedded=true",
     icon: "school",
   },
   {
@@ -31,9 +31,9 @@ export const evaluationFlows: EvaluationFlow[] = [
     description:
       "Utilize esta opção se você pertence a um setor da URE Guarulhos Sul e deseja registrar a avaliação de uma unidade escolar.",
     formUrl:
-      "https://docs.google.com/forms/d/e/1FAIpQLSeCv_MP9l2eM5aE0lN2qOwrn5szus2ySn6H8oli3NmkCo5TiQ/viewform",
+      "https://docs.google.com/forms/d/e/1FAIpQLScv4pA4-0lJm5a-UJ2BLZLy4JTVc-gT83zrUBwqmqpWZOUIoQ/viewform",
     embedUrl:
-      "https://docs.google.com/forms/d/e/1FAIpQLSeCv_MP9l2eM5aE0lN2qOwrn5szus2ySn6H8oli3NmkCo5TiQ/viewform?embedded=true",
+      "https://docs.google.com/forms/d/e/1FAIpQLScv4pA4-0lJm5a-UJ2BLZLy4JTVc-gT83zrUBwqmqpWZOUIoQ/viewform?embedded=true",
     icon: "sectors",
   },
 ];
