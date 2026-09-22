@@ -1,8 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const PUBLIC_EVALUATION_ROUTES = new Set([
+  "/avaliacao",
+  "/avaliacao/escolas-avaliam-setores",
+  "/avaliacao/setores-avaliam-escolas",
+]);
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  if (PUBLIC_EVALUATION_ROUTES.has(request.nextUrl.pathname)) {
+    return response;
+  }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !publishableKey) return response;
